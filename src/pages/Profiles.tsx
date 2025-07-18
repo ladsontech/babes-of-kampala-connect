@@ -1,68 +1,66 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ProfileCard } from "@/components/ProfileCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
-// Mock data for demo
-const allProfiles = [
-  {
-    id: "1",
-    name: "Sarah Nakimera",
-    images: ["https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400"],
-    whatsappNumber: "+256712345678",
-    isActive: true,
-    subscriptionEnds: new Date(2024, 11, 15)
-  },
-  {
-    id: "2", 
-    name: "Grace Mirembe",
-    images: ["https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=400"],
-    whatsappNumber: "+256787654321",
-    isActive: true,
-    subscriptionEnds: new Date(2024, 10, 20)
-  },
-  {
-    id: "3",
-    name: "Joan Nalwanga",
-    images: ["https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400"],
-    whatsappNumber: "+256798765432",
-    isActive: true,
-    subscriptionEnds: new Date(2025, 0, 10)
-  },
-  {
-    id: "4",
-    name: "Maria Kiggundu",
-    images: ["https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400"],
-    whatsappNumber: "+256701234567",
-    isActive: true,
-    subscriptionEnds: new Date(2024, 9, 30)
-  },
-  {
-    id: "5",
-    name: "Ruth Nabasirye",
-    images: ["https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400"],
-    whatsappNumber: "+256756789012",
-    isActive: true,
-    subscriptionEnds: new Date(2024, 11, 25)
-  },
-  {
-    id: "6",
-    name: "Diana Ssempa",
-    images: ["https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400"],
-    whatsappNumber: "+256789012345",
-    isActive: true,
-    subscriptionEnds: new Date(2025, 1, 5)
-  }
-];
+interface Profile {
+  id: string;
+  full_name: string;
+  whatsapp_number: string;
+  images: { image_url: string }[];
+}
 
 export const Profiles = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProfiles();
+  }, []);
+
+  const fetchProfiles = async () => {
+    try {
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (profilesError) throw profilesError;
+
+      // Fetch images for each profile
+      const profilesWithImages = await Promise.all(
+        profilesData.map(async (profile) => {
+          const { data: images, error: imagesError } = await supabase
+            .from('profile_images')
+            .select('image_url')
+            .eq('profile_id', profile.id)
+            .order('image_order');
+
+          if (imagesError) {
+            console.error('Error fetching images:', imagesError);
+            return { ...profile, images: [] };
+          }
+
+          return { ...profile, images: images || [] };
+        })
+      );
+
+      setProfiles(profilesWithImages);
+    } catch (error) {
+      console.error('Error loading profiles:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
   
-  const filteredProfiles = allProfiles.filter(profile =>
-    profile.name.toLowerCase().includes(searchTerm.toLowerCase()) && profile.isActive
+  const filteredProfiles = profiles.filter(profile =>
+    profile.full_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -80,10 +78,10 @@ export const Profiles = () => {
           
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold mb-4 bg-gradient-primary bg-clip-text text-transparent">
-              All Profiles
+              Beautiful Ladies
             </h1>
             <p className="text-lg text-muted-foreground">
-              Browse and connect with amazing women in our community
+              Connect with amazing women from Kampala. Tap any profile to start chatting on WhatsApp!
             </p>
           </div>
           
@@ -100,17 +98,26 @@ export const Profiles = () => {
           </div>
         </div>
         
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {filteredProfiles.map(profile => (
-            <ProfileCard key={profile.id} {...profile} />
-          ))}
-        </div>
-        
-        {filteredProfiles.length === 0 && (
+        {loading ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">Loading profiles...</p>
+          </div>
+        ) : filteredProfiles.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-lg text-muted-foreground">
-              {searchTerm ? 'No profiles match your search.' : 'No active profiles found.'}
+              {searchTerm ? 'No profiles match your search.' : 'No active profiles available at the moment.'}
             </p>
+          </div>
+        ) : (
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {filteredProfiles.map(profile => (
+              <ProfileCard
+                key={profile.id}
+                name={profile.full_name}
+                images={profile.images}
+                whatsappNumber={profile.whatsapp_number}
+              />
+            ))}
           </div>
         )}
         

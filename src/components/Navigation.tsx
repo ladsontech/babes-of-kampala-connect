@@ -1,10 +1,12 @@
 import { Button } from "@/components/ui/button";
-import { Heart, Users, Settings } from "lucide-react";
+import { Heart, Users, Settings, User, LogOut } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, signOut } = useAuth();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-border">
@@ -25,13 +27,41 @@ export const Navigation = () => {
             Browse
           </Button>
           
-          <Button
-            variant={location.pathname === '/signup' ? 'gradient' : 'outline'}
-            onClick={() => navigate('/signup')}
-          >
-            <Heart className="w-4 h-4" />
-            Join Now
-          </Button>
+          {user ? (
+            <>
+              <Button
+                variant={location.pathname === '/my-profile' ? 'default' : 'ghost'}
+                onClick={() => navigate('/my-profile')}
+              >
+                <User className="w-4 h-4" />
+                My Profile
+              </Button>
+              <Button
+                variant="outline"
+                onClick={signOut}
+              >
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant={location.pathname === '/signup' ? 'gradient' : 'outline'}
+                onClick={() => navigate('/signup')}
+              >
+                <Heart className="w-4 h-4" />
+                Join Now
+              </Button>
+              
+              <Button
+                variant="ghost"
+                onClick={() => navigate('/auth')}
+              >
+                Sign In
+              </Button>
+            </>
+          )}
           
           <Button
             variant="ghost"

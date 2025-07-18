@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Upload, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface SignupData {
   fullName: string;
@@ -14,6 +17,9 @@ interface SignupData {
 
 export const SignupForm = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<SignupData>({
     fullName: "",
     email: "",
@@ -23,10 +29,10 @@ export const SignupForm = () => {
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    if (formData.images.length + files.length > 3) {
+    if (formData.images.length + files.length > 5) {
       toast({
         title: "Too many images",
-        description: "You can upload maximum 3 images",
+        description: "You can upload maximum 5 images",
         variant: "destructive"
       });
       return;
@@ -45,8 +51,34 @@ export const SignupForm = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const uploadImage = async (file: File, userId: string, profileId: string, order: number) => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${userId}/${profileId}_${order}.${fileExt}`;
+    
+    const { error } = await supabase.storage
+      .from('profile-images')
+      .upload(fileName, file);
+    
+    if (error) throw error;
+    
+    const { data } = supabase.storage
+      .from('profile-images')
+      .getPublicUrl(fileName);
+    
+    return data.publicUrl;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to create a profile",
+        variant: "destructive"
+      });
+      return;
+    }
     
     if (!formData.fullName || !formData.email || !formData.whatsappNumber) {
       toast({
@@ -66,19 +98,53 @@ export const SignupForm = () => {
       return;
     }
 
-    // Here you would typically send data to your backend
-    toast({
-      title: "Profile submitted!",
-      description: "Your profile has been submitted for review. You'll be contacted soon via WhatsApp.",
-    });
+    setLoading(true);
 
-    // Reset form
-    setFormData({
-      fullName: "",
-      email: "",
-      whatsappNumber: "+256",
-      images: []
-    });
+    try {
+      // Create profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          user_id: user.id,
+          full_name: formData.fullName,
+          email: formData.email,
+          whatsapp_number: formData.whatsappNumber,
+        })
+        .select()
+        .single();
+
+      if (profileError) throw profileError;
+
+      // Upload images and create image records
+      for (let i = 0; i < formData.images.length; i++) {
+        const imageUrl = await uploadImage(formData.images[i], user.id, profile.id, i + 1);
+        
+        const { error: imageError } = await supabase
+          .from('profile_images')
+          .insert({
+            profile_id: profile.id,
+            image_url: imageUrl,
+            image_order: i + 1
+          });
+
+        if (imageError) throw imageError;
+      }
+
+      toast({
+        title: "Profile created!",
+        description: "Your profile has been submitted for admin review.",
+      });
+
+      navigate('/');
+    } catch (error: any) {
+      toast({
+        title: "Error creating profile",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -130,15 +196,15 @@ export const SignupForm = () => {
 
           <div>
             <label className="text-sm font-medium text-foreground mb-2 block">
-              Profile Images * (1-3 images)
+              Profile Images * (1-5 images)
             </label>
             
             <div className="space-y-3">
-              {formData.images.length < 3 && (
+              {formData.images.length < 5 && (
                 <label className="border-2 border-dashed border-border rounded-lg p-6 cursor-pointer hover:border-primary transition-colors flex flex-col items-center justify-center">
                   <Upload className="w-8 h-8 text-muted-foreground mb-2" />
                   <span className="text-sm text-muted-foreground">
-                    Upload image ({formData.images.length}/3)
+                    Upload image ({formData.images.length}/5)
                   </span>
                   <input
                     type="file"
@@ -151,7 +217,7 @@ export const SignupForm = () => {
               )}
 
               {formData.images.length > 0 && (
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-5 gap-2">
                   {formData.images.map((file, index) => (
                     <div key={index} className="relative group">
                       <img
@@ -173,8 +239,8 @@ export const SignupForm = () => {
             </div>
           </div>
 
-          <Button type="submit" variant="gradient" className="w-full" size="lg">
-            Submit Profile
+          <Button type="submit" variant="gradient" className="w-full" size="lg" disabled={loading}>
+            {loading ? "Creating Profile..." : "Submit Profile"}
           </Button>
         </form>
       </CardContent>
