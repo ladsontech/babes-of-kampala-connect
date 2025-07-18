@@ -5,11 +5,56 @@ import { ProfileCard } from "@/components/ProfileCard";
 import { SignupForm } from "@/components/SignupForm";
 import { Navigation } from "@/components/Navigation";
 import heroImage from "@/assets/hero-image.jpg";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
 
-// Mock data for demo
-// No hard coded profiles - will load from database
+interface Profile {
+  id: string;
+  full_name: string;
+  whatsapp_number: string;
+  images: { image_url: string }[];
+}
 
 export const Home = () => {
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProfiles();
+  }, []);
+
+  const fetchProfiles = async () => {
+    try {
+      const { data: profilesData, error } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          full_name,
+          whatsapp_number,
+          profile_images (
+            image_url
+          )
+        `)
+        .eq('is_active', true)
+        .gte('subscription_end_date', new Date().toISOString());
+
+      if (error) throw error;
+
+      const formattedProfiles = profilesData?.map(profile => ({
+        id: profile.id,
+        full_name: profile.full_name,
+        whatsapp_number: profile.whatsapp_number,
+        images: profile.profile_images || []
+      })) || [];
+
+      setProfiles(formattedProfiles);
+    } catch (error) {
+      console.error('Error fetching profiles:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleJoinClick = () => {
     document.getElementById('signup-section')?.scrollIntoView({ 
       behavior: 'smooth' 
@@ -107,21 +152,38 @@ export const Home = () => {
         </div>
       </section>
 
-      {/* Featured Profiles Section */}
+      {/* Profiles Section */}
       <section id="profiles-section" className="py-16">
         <div className="max-w-6xl mx-auto px-6">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-foreground">
-            Featured Profiles
+            Our Community
           </h2>
           
-          <div className="text-center">
-            <p className="text-muted-foreground mb-4">
-              No profiles available yet. Be the first to join our amazing community!
-            </p>
-            <Button variant="gradient" size="lg" onClick={handleJoinClick}>
-              Join Now
-            </Button>
-          </div>
+          {loading ? (
+            <div className="text-center">
+              <p className="text-muted-foreground">Loading profiles...</p>
+            </div>
+          ) : profiles.length > 0 ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {profiles.map(profile => (
+                <ProfileCard
+                  key={profile.id}
+                  name={profile.full_name}
+                  images={profile.images}
+                  whatsappNumber={profile.whatsapp_number}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center">
+              <p className="text-muted-foreground mb-4">
+                No profiles available yet. Be the first to join our amazing community!
+              </p>
+              <Button variant="gradient" size="lg" onClick={handleJoinClick}>
+                Join Now
+              </Button>
+            </div>
+          )}
         </div>
       </section>
 
