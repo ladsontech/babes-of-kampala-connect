@@ -11,7 +11,7 @@ const featuredProfiles = [
   {
     id: "1",
     name: "Sarah Nakimera",
-    images: ["https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400"],
+    images: [{ image_url: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400" }],
     whatsappNumber: "+256712345678",
     isActive: true,
     subscriptionEnds: new Date(2024, 11, 15)
@@ -19,7 +19,7 @@ const featuredProfiles = [
   {
     id: "2", 
     name: "Grace Mirembe",
-    images: ["https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=400"],
+    images: [{ image_url: "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=400" }],
     whatsappNumber: "+256787654321",
     isActive: true,
     subscriptionEnds: new Date(2024, 10, 20)
@@ -27,7 +27,7 @@ const featuredProfiles = [
   {
     id: "3",
     name: "Joan Nalwanga",
-    images: ["https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400"],
+    images: [{ image_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400" }],
     whatsappNumber: "+256798765432",
     isActive: true,
     subscriptionEnds: new Date(2025, 0, 10)
