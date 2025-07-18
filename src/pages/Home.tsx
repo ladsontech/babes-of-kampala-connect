@@ -7,32 +7,7 @@ import { Navigation } from "@/components/Navigation";
 import heroImage from "@/assets/hero-image.jpg";
 
 // Mock data for demo
-const featuredProfiles = [
-  {
-    id: "1",
-    name: "Sarah Nakimera",
-    images: [{ image_url: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400" }],
-    whatsappNumber: "+256712345678",
-    isActive: true,
-    subscriptionEnds: new Date(2024, 11, 15)
-  },
-  {
-    id: "2", 
-    name: "Grace Mirembe",
-    images: [{ image_url: "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=400" }],
-    whatsappNumber: "+256787654321",
-    isActive: true,
-    subscriptionEnds: new Date(2024, 10, 20)
-  },
-  {
-    id: "3",
-    name: "Joan Nalwanga",
-    images: [{ image_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400" }],
-    whatsappNumber: "+256798765432",
-    isActive: true,
-    subscriptionEnds: new Date(2025, 0, 10)
-  }
-];
+// No hard coded profiles - will load from database
 
 export const Home = () => {
   const handleJoinClick = () => {
@@ -139,18 +114,12 @@ export const Home = () => {
             Featured Profiles
           </h2>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {featuredProfiles.map(profile => (
-              <ProfileCard key={profile.id} {...profile} />
-            ))}
-          </div>
-          
           <div className="text-center">
             <p className="text-muted-foreground mb-4">
-              Join our community to view all profiles and connect with amazing women
+              No profiles available yet. Be the first to join our amazing community!
             </p>
             <Button variant="gradient" size="lg" onClick={handleJoinClick}>
-              View All Profiles
+              Join Now
             </Button>
           </div>
         </div>
