@@ -186,70 +186,73 @@ export const AdminPanel = () => {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6">
         <p className="text-center text-muted-foreground">Loading profiles...</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
+    <div className="max-w-7xl mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle className="bg-gradient-primary bg-clip-text text-transparent">
+        <CardHeader className="pb-4">
+          <CardTitle className="bg-gradient-primary bg-clip-text text-transparent text-lg sm:text-xl">
             Admin Panel - Kampala Babes
           </CardTitle>
         </CardHeader>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         <div className="lg:col-span-2">
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">All Profiles ({profiles.length})</CardTitle>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-base sm:text-lg">All Profiles ({profiles.length})</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {profiles.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">No profiles found.</p>
                 ) : (
                   profiles.map(profile => (
-                    <div key={profile.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center gap-4">
+                    <div key={profile.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg space-y-3 sm:space-y-0">
+                      <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
                         {profile.images[0] && (
                           <img 
                             src={profile.images[0].image_url} 
                             alt={profile.full_name}
-                            className="w-12 h-12 rounded-full object-cover"
+                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover flex-shrink-0"
                           />
                         )}
-                        <div>
-                          <h3 className="font-medium">{profile.full_name}</h3>
-                          <p className="text-sm text-muted-foreground">{profile.email}</p>
-                          <p className="text-xs text-muted-foreground">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-medium text-sm sm:text-base truncate">{profile.full_name}</h3>
+                          <p className="text-xs sm:text-sm text-muted-foreground truncate">{profile.email}</p>
+                          <p className="text-xs text-muted-foreground hidden sm:block">
                             Submitted: {formatDate(profile.created_at)}
                           </p>
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-3">
-                        {getStatusBadge(profile)}
-                        
+                      <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 flex-wrap">
                         <div className="flex items-center gap-2">
-                          <Switch
-                            checked={profile.is_active}
-                            onCheckedChange={() => toggleProfileVisibility(profile.id)}
-                          />
-                          {profile.is_active ? 
-                            <Eye className="w-4 h-4 text-green-500" /> : 
-                            <EyeOff className="w-4 h-4 text-gray-400" />
-                          }
+                          {getStatusBadge(profile)}
+                          
+                          <div className="flex items-center gap-1 sm:gap-2">
+                            <Switch
+                              checked={profile.is_active}
+                              onCheckedChange={() => toggleProfileVisibility(profile.id)}
+                            />
+                            {profile.is_active ? 
+                              <Eye className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" /> : 
+                              <EyeOff className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
+                            }
+                          </div>
                         </div>
                         
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => setSelectedProfile(profile)}
+                          className="text-xs sm:text-sm"
                         >
                           Manage
                         </Button>
@@ -262,11 +265,11 @@ export const AdminPanel = () => {
           </Card>
         </div>
 
-        <div>
+        <div className="lg:sticky lg:top-6">
           {selectedProfile && (
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Manage Profile</CardTitle>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-base sm:text-lg">Manage Profile</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="text-center">
@@ -274,11 +277,11 @@ export const AdminPanel = () => {
                     <img 
                       src={selectedProfile.images[0].image_url} 
                       alt={selectedProfile.full_name}
-                      className="w-24 h-24 rounded-full object-cover mx-auto mb-3"
+                      className="w-16 h-16 sm:w-24 sm:h-24 rounded-full object-cover mx-auto mb-3"
                     />
                   )}
-                  <h3 className="font-semibold">{selectedProfile.full_name}</h3>
-                  <p className="text-sm text-muted-foreground">{selectedProfile.email}</p>
+                  <h3 className="font-semibold text-sm sm:text-base">{selectedProfile.full_name}</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground break-all">{selectedProfile.email}</p>
                 </div>
 
                 <div className="space-y-3">
@@ -301,25 +304,26 @@ export const AdminPanel = () => {
                 </div>
 
                 <div className="border-t pt-4">
-                  <h4 className="font-medium mb-3">Activate Subscription</h4>
+                  <h4 className="font-medium mb-3 text-sm sm:text-base">Activate Subscription</h4>
                   <div className="space-y-3">
                     <div>
-                      <label className="text-sm text-muted-foreground">Duration (months)</label>
+                      <label className="text-xs sm:text-sm text-muted-foreground">Duration (months)</label>
                       <Input
                         type="number"
                         min="1"
                         max="12"
                         value={subscriptionMonths}
                         onChange={(e) => setSubscriptionMonths(parseInt(e.target.value) || 1)}
+                        className="text-sm"
                       />
                     </div>
                     
                     <Button
                       variant="gradient"
-                      className="w-full"
+                      className="w-full text-sm"
                       onClick={() => activateSubscription(selectedProfile.id, subscriptionMonths)}
                     >
-                      <Calendar className="w-4 h-4" />
+                      <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
                       Activate {subscriptionMonths} Month{subscriptionMonths > 1 ? 's' : ''}
                     </Button>
                   </div>
@@ -327,10 +331,10 @@ export const AdminPanel = () => {
 
                 <Button
                   variant="outline"
-                  className="w-full"
+                  className="w-full text-sm"
                   onClick={() => window.open(`https://wa.me/${selectedProfile.whatsapp_number}`, '_blank')}
                 >
-                  <MessageCircle className="w-4 h-4" />
+                  <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4" />
                   Contact on WhatsApp
                 </Button>
               </CardContent>

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 export const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState('hookup123');
   const [loading, setLoading] = useState(false);
   const { signUp, signIn } = useAuth();
   const { toast } = useToast();
@@ -53,9 +54,9 @@ export const Auth = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Card className="max-w-md w-full">
+      <Card className="max-w-sm w-full">
         <CardHeader>
-          <CardTitle className="text-center bg-gradient-primary bg-clip-text text-transparent">
+          <CardTitle className="text-center bg-gradient-primary bg-clip-text text-transparent text-lg sm:text-xl">
             {isSignUp ? 'Create Account' : 'Welcome Back'}
           </CardTitle>
         </CardHeader>
@@ -72,6 +73,7 @@ export const Auth = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="your.email@example.com"
                 required
+                className="text-sm"
               />
             </div>
 
@@ -85,10 +87,14 @@ export const Auth = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
+                className="text-sm"
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                Default password: hookup123
+              </p>
             </div>
 
-            <Button type="submit" variant="gradient" className="w-full" disabled={loading}>
+            <Button type="submit" variant="gradient" className="w-full text-sm" disabled={loading}>
               {loading ? 'Loading...' : (isSignUp ? 'Sign Up' : 'Sign In')}
             </Button>
           </form>
@@ -96,7 +102,7 @@ export const Auth = () => {
           <div className="mt-4 text-center">
             <button
               onClick={() => setIsSignUp(!isSignUp)}
-              className="text-sm text-primary hover:underline"
+              className="text-xs sm:text-sm text-primary hover:underline"
             >
               {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
             </button>

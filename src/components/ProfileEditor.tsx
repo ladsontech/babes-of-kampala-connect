@@ -26,6 +26,7 @@ export const ProfileEditor = () => {
   const [loading, setLoading] = useState(false);
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [newImages, setNewImages] = useState<NewImage[]>([]);
+  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -37,13 +38,27 @@ export const ProfileEditor = () => {
     if (!user) return;
 
     try {
+      // Use maybeSingle() instead of single() to handle cases with no records
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
       if (profileError) throw profileError;
+
+      if (!profile) {
+        // No profile exists, show create form
+        setIsCreating(true);
+        setProfileData({
+          id: '',
+          full_name: '',
+          email: user.email || '',
+          whatsapp_number: '',
+          images: []
+        });
+        return;
+      }
 
       const { data: images, error: imagesError } = await supabase
         .from('profile_images')
@@ -57,7 +72,9 @@ export const ProfileEditor = () => {
         ...profile,
         images: images || []
       });
+      setIsCreating(false);
     } catch (error: any) {
+      console.error('Profile fetch error:', error);
       toast({
         title: "Error loading profile",
         description: error.message,
@@ -143,27 +160,47 @@ export const ProfileEditor = () => {
     setLoading(true);
 
     try {
-      // Update profile info
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          full_name: profileData.full_name,
-          email: profileData.email,
-          whatsapp_number: profileData.whatsapp_number,
-        })
-        .eq('id', profileData.id);
+      let profileId = profileData.id;
 
-      if (updateError) throw updateError;
+      if (isCreating) {
+        // Create new profile
+        const { data: newProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert({
+            user_id: user!.id,
+            full_name: profileData.full_name,
+            email: profileData.email,
+            whatsapp_number: profileData.whatsapp_number,
+          })
+          .select()
+          .single();
+
+        if (createError) throw createError;
+        profileId = newProfile.id;
+        setIsCreating(false);
+      } else {
+        // Update existing profile
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({
+            full_name: profileData.full_name,
+            email: profileData.email,
+            whatsapp_number: profileData.whatsapp_number,
+          })
+          .eq('id', profileData.id);
+
+        if (updateError) throw updateError;
+      }
 
       // Upload new images
       for (let i = 0; i < newImages.length; i++) {
         const newOrder = profileData.images.length + i + 1;
-        const imageUrl = await uploadImage(newImages[i].file, profileData.id, newOrder);
+        const imageUrl = await uploadImage(newImages[i].file, profileId, newOrder);
         
         const { error: imageError } = await supabase
           .from('profile_images')
           .insert({
-            profile_id: profileData.id,
+            profile_id: profileId,
             image_url: imageUrl,
             image_order: newOrder
           });
@@ -175,12 +212,13 @@ export const ProfileEditor = () => {
       await fetchProfile();
 
       toast({
-        title: "Profile updated!",
+        title: isCreating ? "Profile created!" : "Profile updated!",
         description: "Your changes have been saved successfully.",
       });
     } catch (error: any) {
+      console.error('Profile save error:', error);
       toast({
-        title: "Error updating profile",
+        title: isCreating ? "Error creating profile" : "Error updating profile",
         description: error.message,
         variant: "destructive"
       });
@@ -203,7 +241,7 @@ export const ProfileEditor = () => {
     <Card className="max-w-md mx-auto">
       <CardHeader>
         <CardTitle className="text-center bg-gradient-primary bg-clip-text text-transparent">
-          Edit Your Profile
+          {isCreating ? 'Create Your Profile' : 'Edit Your Profile'}
         </CardTitle>
       </CardHeader>
       
@@ -316,7 +354,7 @@ export const ProfileEditor = () => {
           </div>
 
           <Button type="submit" variant="gradient" className="w-full" size="lg" disabled={loading}>
-            {loading ? "Updating Profile..." : "Save Changes"}
+            {loading ? (isCreating ? "Creating Profile..." : "Updating Profile...") : (isCreating ? "Create Profile" : "Save Changes")}
           </Button>
         </form>
       </CardContent>
