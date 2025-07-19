@@ -1,30 +1,27 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Eye, EyeOff, Calendar, MessageCircle } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Eye, EyeOff, Trash2, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { AdminProfileForm } from "./AdminProfileForm";
 
 interface Profile {
   id: string;
   full_name: string;
-  email: string;
   whatsapp_number: string;
   is_active: boolean;
-  subscription_end_date?: string;
   created_at: string;
-  images: { id: string; image_url: string; image_order: number }[];
+  images: { image_url: string }[];
 }
 
 export const AdminPanel = () => {
-  const { toast } = useToast();
   const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
-  const [subscriptionMonths, setSubscriptionMonths] = useState(1);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchProfiles();
@@ -44,7 +41,7 @@ export const AdminPanel = () => {
         profilesData.map(async (profile) => {
           const { data: images, error: imagesError } = await supabase
             .from('profile_images')
-            .select('*')
+            .select('image_url')
             .eq('profile_id', profile.id)
             .order('image_order');
 
@@ -58,10 +55,11 @@ export const AdminPanel = () => {
       );
 
       setProfiles(profilesWithImages);
-    } catch (error: any) {
+    } catch (error) {
+      console.error('Error loading profiles:', error);
       toast({
-        title: "Error loading profiles",
-        description: error.message,
+        title: "Error",
+        description: "Failed to load profiles",
         variant: "destructive"
       });
     } finally {
@@ -69,279 +67,181 @@ export const AdminPanel = () => {
     }
   };
 
-  const toggleProfileVisibility = async (profileId: string) => {
+  const toggleProfileStatus = async (profileId: string, currentStatus: boolean) => {
     try {
-      const profile = profiles.find(p => p.id === profileId);
-      if (!profile) return;
-
       const { error } = await supabase
         .from('profiles')
-        .update({ is_active: !profile.is_active })
-        .eq('id', profileId);
-
-      if (error) throw error;
-
-      setProfiles(profiles.map(p => 
-        p.id === profileId 
-          ? { ...p, is_active: !p.is_active }
-          : p
-      ));
-
-      if (selectedProfile?.id === profileId) {
-        setSelectedProfile({ ...selectedProfile, is_active: !selectedProfile.is_active });
-      }
-
-      toast({
-        title: `Profile ${profile.is_active ? 'hidden' : 'activated'}`,
-        description: `${profile.full_name}'s profile is now ${profile.is_active ? 'hidden' : 'visible'}.`,
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error updating profile",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-  };
-
-  const activateSubscription = async (profileId: string, months: number) => {
-    try {
-      const endDate = new Date();
-      endDate.setMonth(endDate.getMonth() + months);
-      
-      const { error } = await supabase
-        .from('profiles')
-        .update({ 
-          subscription_end_date: endDate.toISOString(),
-          is_active: true 
-        })
+        .update({ is_active: !currentStatus })
         .eq('id', profileId);
 
       if (error) throw error;
 
       setProfiles(profiles.map(profile => 
         profile.id === profileId 
-          ? { 
-              ...profile, 
-              subscription_end_date: endDate.toISOString(),
-              is_active: true 
-            }
+          ? { ...profile, is_active: !currentStatus }
           : profile
       ));
 
-      if (selectedProfile?.id === profileId) {
-        setSelectedProfile({
-          ...selectedProfile,
-          subscription_end_date: endDate.toISOString(),
-          is_active: true
-        });
-      }
-
-      const profile = profiles.find(p => p.id === profileId);
       toast({
-        title: "Subscription activated",
-        description: `${profile?.full_name}'s subscription set for ${months} month${months > 1 ? 's' : ''}.`,
+        title: "Success",
+        description: `Profile ${!currentStatus ? 'activated' : 'deactivated'} successfully`,
       });
     } catch (error: any) {
       toast({
-        title: "Error updating subscription",
+        title: "Error",
         description: error.message,
         variant: "destructive"
       });
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    });
-  };
+  const deleteProfile = async (profileId: string) => {
+    if (!confirm('Are you sure you want to delete this profile? This action cannot be undone.')) {
+      return;
+    }
 
-  const getStatusBadge = (profile: Profile) => {
-    if (!profile.is_active) {
-      return <Badge variant="secondary">Inactive</Badge>;
+    try {
+      // Delete associated images first
+      const { error: imagesError } = await supabase
+        .from('profile_images')
+        .delete()
+        .eq('profile_id', profileId);
+
+      if (imagesError) throw imagesError;
+
+      // Delete the profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', profileId);
+
+      if (profileError) throw profileError;
+
+      setProfiles(profiles.filter(profile => profile.id !== profileId));
+
+      toast({
+        title: "Success",
+        description: "Profile deleted successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
     }
-    
-    if (!profile.subscription_end_date) {
-      return <Badge variant="outline">No Subscription</Badge>;
-    }
-    
-    const now = new Date();
-    const endDate = new Date(profile.subscription_end_date);
-    const timeLeft = endDate.getTime() - now.getTime();
-    const daysLeft = Math.ceil(timeLeft / (1000 * 60 * 60 * 24));
-    
-    if (daysLeft <= 0) {
-      return <Badge variant="destructive">Expired</Badge>;
-    }
-    
-    if (daysLeft <= 7) {
-      return <Badge variant="destructive">Expiring Soon</Badge>;
-    }
-    
-    return <Badge className="bg-green-500 text-white">Active</Badge>;
   };
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto p-4 sm:p-6">
-        <p className="text-center text-muted-foreground">Loading profiles...</p>
+      <div className="p-4 sm:p-6">
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
-      <Card>
-        <CardHeader className="pb-4">
-          <CardTitle className="bg-gradient-primary bg-clip-text text-transparent text-lg sm:text-xl">
-            Admin Panel - Kampala Babes
-          </CardTitle>
-        </CardHeader>
-      </Card>
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2 bg-gradient-primary bg-clip-text text-transparent">
+          Admin Panel
+        </h1>
+        <p className="text-sm sm:text-base text-muted-foreground">
+          Manage profiles and site content
+        </p>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="text-base sm:text-lg">All Profiles ({profiles.length})</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3 sm:space-y-4">
-                {profiles.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">No profiles found.</p>
-                ) : (
-                  profiles.map(profile => (
-                    <div key={profile.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg space-y-3 sm:space-y-0">
-                      <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-                        {profile.images[0] && (
-                          <img 
-                            src={profile.images[0].image_url} 
-                            alt={profile.full_name}
-                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover flex-shrink-0"
-                          />
-                        )}
-                        <div className="min-w-0 flex-1">
-                          <h3 className="font-medium text-sm sm:text-base truncate">{profile.full_name}</h3>
-                          <p className="text-xs sm:text-sm text-muted-foreground truncate">{profile.email}</p>
-                          <p className="text-xs text-muted-foreground hidden sm:block">
-                            Submitted: {formatDate(profile.created_at)}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 flex-wrap">
-                        <div className="flex items-center gap-2">
-                          {getStatusBadge(profile)}
-                          
-                          <div className="flex items-center gap-1 sm:gap-2">
-                            <Switch
-                              checked={profile.is_active}
-                              onCheckedChange={() => toggleProfileVisibility(profile.id)}
-                            />
-                            {profile.is_active ? 
-                              <Eye className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" /> : 
-                              <EyeOff className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
-                            }
-                          </div>
-                        </div>
-                        
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setSelectedProfile(profile)}
-                          className="text-xs sm:text-sm"
-                        >
-                          Manage
-                        </Button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+      <Tabs defaultValue="profiles" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsTrigger value="profiles" className="text-xs sm:text-sm">
+            Manage Profiles ({profiles.length})
+          </TabsTrigger>
+          <TabsTrigger value="create" className="text-xs sm:text-sm">
+            <Plus className="w-4 h-4 mr-1" />
+            Create Profile
+          </TabsTrigger>
+        </TabsList>
 
-        <div className="lg:sticky lg:top-6">
-          {selectedProfile && (
+        <TabsContent value="create">
+          <AdminProfileForm onProfileCreated={fetchProfiles} />
+        </TabsContent>
+
+        <TabsContent value="profiles">
+          {profiles.length === 0 ? (
             <Card>
-              <CardHeader className="pb-4">
-                <CardTitle className="text-base sm:text-lg">Manage Profile</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-center">
-                  {selectedProfile.images[0] && (
-                    <img 
-                      src={selectedProfile.images[0].image_url} 
-                      alt={selectedProfile.full_name}
-                      className="w-16 h-16 sm:w-24 sm:h-24 rounded-full object-cover mx-auto mb-3"
-                    />
-                  )}
-                  <h3 className="font-semibold text-sm sm:text-base">{selectedProfile.full_name}</h3>
-                  <p className="text-xs sm:text-sm text-muted-foreground break-all">{selectedProfile.email}</p>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Visibility:</span>
-                    <Switch
-                      checked={selectedProfile.is_active}
-                      onCheckedChange={() => toggleProfileVisibility(selectedProfile.id)}
-                    />
-                  </div>
-
-                  {selectedProfile.subscription_end_date && (
-                    <div className="text-sm">
-                      <span>Subscription ends:</span>
-                      <p className="font-medium">
-                        {formatDate(selectedProfile.subscription_end_date)}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="border-t pt-4">
-                  <h4 className="font-medium mb-3 text-sm sm:text-base">Activate Subscription</h4>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-xs sm:text-sm text-muted-foreground">Duration (months)</label>
-                      <Input
-                        type="number"
-                        min="1"
-                        max="12"
-                        value={subscriptionMonths}
-                        onChange={(e) => setSubscriptionMonths(parseInt(e.target.value) || 1)}
-                        className="text-sm"
-                      />
-                    </div>
-                    
-                    <Button
-                      variant="gradient"
-                      className="w-full text-sm"
-                      onClick={() => activateSubscription(selectedProfile.id, subscriptionMonths)}
-                    >
-                      <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
-                      Activate {subscriptionMonths} Month{subscriptionMonths > 1 ? 's' : ''}
-                    </Button>
-                  </div>
-                </div>
-
-                <Button
-                  variant="outline"
-                  className="w-full text-sm"
-                  onClick={() => window.open(`https://wa.me/${selectedProfile.whatsapp_number}`, '_blank')}
-                >
-                  <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-                  Contact on WhatsApp
-                </Button>
+              <CardContent className="text-center py-8">
+                <p className="text-muted-foreground">No profiles found</p>
               </CardContent>
             </Card>
+          ) : (
+            <div className="grid gap-4 sm:gap-6">
+              {profiles.map(profile => (
+                <Card key={profile.id} className="overflow-hidden">
+                  <CardHeader className="pb-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <CardTitle className="text-lg sm:text-xl">{profile.full_name}</CardTitle>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={profile.is_active ? "default" : "secondary"} className="text-xs">
+                          {profile.is_active ? "Active" : "Inactive"}
+                        </Badge>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => toggleProfileStatus(profile.id, profile.is_active)}
+                            className="p-2"
+                          >
+                            {profile.is_active ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => deleteProfile(profile.id)}
+                            className="p-2 text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="font-medium text-muted-foreground">WhatsApp</p>
+                        <p className="font-mono">{profile.whatsapp_number}</p>
+                      </div>
+                      <div>
+                        <p className="font-medium text-muted-foreground">Created</p>
+                        <p>{new Date(profile.created_at).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                    
+                    {profile.images.length > 0 && (
+                      <div>
+                        <p className="font-medium text-muted-foreground mb-2 text-sm">Images ({profile.images.length})</p>
+                        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                          {profile.images.map((image, index) => (
+                            <img
+                              key={index}
+                              src={image.image_url}
+                              alt={`${profile.full_name} ${index + 1}`}
+                              className="w-full h-16 sm:h-20 object-cover rounded-md"
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           )}
-        </div>
-      </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

@@ -1,14 +1,12 @@
 
 import { Button } from "@/components/ui/button";
-import { Heart, Users, Settings, User, LogOut, Menu, X } from "lucide-react";
+import { Users, Settings } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 
 export const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, signOut } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const toggleMobileMenu = () => {
@@ -24,10 +22,17 @@ export const Navigation = () => {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-border shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
         <div 
-          className="text-xl sm:text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent cursor-pointer"
+          className="flex items-center gap-3 cursor-pointer"
           onClick={() => handleNavigation('/')}
         >
-          Kampala Babes
+          <img 
+            src="/logo.png" 
+            alt="Kampala Babes Logo" 
+            className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
+          />
+          <div className="text-xl sm:text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+            Kampala Babes
+          </div>
         </div>
         
         {/* Desktop Navigation */}
@@ -40,48 +45,6 @@ export const Navigation = () => {
             <Users className="w-4 h-4" />
             <span className="ml-2">Browse</span>
           </Button>
-          
-          {user ? (
-            <>
-              <Button
-                variant={location.pathname === '/my-profile' ? 'default' : 'ghost'}
-                onClick={() => navigate('/my-profile')}
-                size="sm"
-              >
-                <User className="w-4 h-4" />
-                <span className="ml-2">My Profile</span>
-              </Button>
-              <Button
-                variant="outline"
-                onClick={signOut}
-                size="sm"
-              >
-                <LogOut className="w-4 h-4" />
-                <span className="ml-2">Sign Out</span>
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                variant="outline"
-                onClick={() => navigate('/auth')}
-                size="sm"
-                className="font-medium"
-              >
-                Sign In
-              </Button>
-              
-              <Button
-                variant="gradient"
-                onClick={() => navigate('/signup')}
-                size="sm"
-                className="font-medium"
-              >
-                <Heart className="w-4 h-4" />
-                <span className="ml-2">Join Now</span>
-              </Button>
-            </>
-          )}
           
           <Button
             variant="ghost"
@@ -101,7 +64,15 @@ export const Navigation = () => {
             onClick={toggleMobileMenu}
             className="p-2"
           >
-            {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {isMobileMenuOpen ? (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
           </Button>
         </div>
       </div>
@@ -119,54 +90,6 @@ export const Navigation = () => {
               <Users className="w-4 h-4" />
               <span className="ml-2">Browse Profiles</span>
             </Button>
-            
-            {user ? (
-              <>
-                <Button
-                  variant={location.pathname === '/my-profile' ? 'default' : 'ghost'}
-                  onClick={() => handleNavigation('/my-profile')}
-                  className="w-full justify-start"
-                  size="sm"
-                >
-                  <User className="w-4 h-4" />
-                  <span className="ml-2">My Profile</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    signOut();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="w-full justify-start"
-                  size="sm"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span className="ml-2">Sign Out</span>
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  variant="outline"
-                  onClick={() => handleNavigation('/auth')}
-                  className="w-full justify-start font-medium"
-                  size="sm"
-                >
-                  <User className="w-4 h-4" />
-                  <span className="ml-2">Sign In</span>
-                </Button>
-                
-                <Button
-                  variant="gradient"
-                  onClick={() => handleNavigation('/signup')}
-                  className="w-full justify-start font-medium"
-                  size="sm"
-                >
-                  <Heart className="w-4 h-4" />
-                  <span className="ml-2">Join Now</span>
-                </Button>
-              </>
-            )}
             
             <Button
               variant="ghost"
