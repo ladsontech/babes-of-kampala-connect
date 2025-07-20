@@ -26,7 +26,7 @@ export const Navigation = () => {
           onClick={() => handleNavigation('/')}
         >
           <img 
-            src="/logo.png" 
+            src="/images/logo.png" 
             alt="Kampala Babes Logo" 
             className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
           />
