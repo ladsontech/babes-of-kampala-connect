@@ -49,35 +49,35 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
-          email: string
+          email: string | null
           full_name: string
           id: string
           is_active: boolean
           subscription_end_date: string | null
           updated_at: string
-          user_id: string
+          user_id: string | null
           whatsapp_number: string
         }
         Insert: {
           created_at?: string
-          email: string
+          email?: string | null
           full_name: string
           id?: string
           is_active?: boolean
           subscription_end_date?: string | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
           whatsapp_number: string
         }
         Update: {
           created_at?: string
-          email?: string
+          email?: string | null
           full_name?: string
           id?: string
           is_active?: boolean
           subscription_end_date?: string | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
           whatsapp_number?: string
         }
         Relationships: []
