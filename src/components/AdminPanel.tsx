@@ -55,6 +55,7 @@ export const AdminPanel = () => {
             return { 
               ...profile, 
               images: [],
+              // Ensure all required fields are present
               user_id: profile.user_id || null,
               email: profile.email || null
             };
@@ -63,6 +64,7 @@ export const AdminPanel = () => {
           return { 
             ...profile, 
             images: images || [],
+            // Ensure all required fields are present
             user_id: profile.user_id || null,
             email: profile.email || null
           };
