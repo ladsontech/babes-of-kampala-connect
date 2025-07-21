@@ -12,8 +12,6 @@ interface Profile {
   whatsapp_number: string;
   is_active: boolean;
   created_at: string;
-  user_id: string | null;
-  email: string | null;
   images: { id: string; image_url: string }[];
 }
 

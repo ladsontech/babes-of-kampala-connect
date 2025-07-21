@@ -87,15 +87,13 @@ export const AdminProfileForm = ({ onProfileCreated }: { onProfileCreated?: () =
     setLoading(true);
 
     try {
-      // Create profile without user_id and email (admin created)
+      // Create profile (admin created)
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .insert({
           full_name: formData.fullName,
           whatsapp_number: formData.whatsappNumber,
           is_active: true, // Admin created profiles are active by default
-          user_id: null, // Explicitly set to null for admin profiles
-          email: null // Explicitly set to null for admin profiles
         })
         .select()
         .single();

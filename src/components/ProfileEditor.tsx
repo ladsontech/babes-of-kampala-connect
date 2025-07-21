@@ -10,9 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface ProfileData {
   id: string;
   full_name: string;
-  email: string;
   whatsapp_number: string;
-  user_id: string | null;
   images: { id: string; image_url: string; image_order: number }[];
 }
 
@@ -43,7 +41,6 @@ export const ProfileEditor = () => {
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('user_id', user.id)
         .maybeSingle();
 
       if (profileError) throw profileError;
@@ -54,9 +51,7 @@ export const ProfileEditor = () => {
         setProfileData({
           id: '',
           full_name: '',
-          email: user.email || '',
           whatsapp_number: '',
-          user_id: user.id,
           images: []
         });
         return;
@@ -73,9 +68,7 @@ export const ProfileEditor = () => {
       setProfileData({
         id: profile.id,
         full_name: profile.full_name,
-        email: profile.email || user.email || '',
         whatsapp_number: profile.whatsapp_number,
-        user_id: profile.user_id,
         images: images || []
       });
       setIsCreating(false);
@@ -173,9 +166,7 @@ export const ProfileEditor = () => {
         const { data: newProfile, error: createError } = await supabase
           .from('profiles')
           .insert({
-            user_id: user!.id,
             full_name: profileData.full_name,
-            email: profileData.email,
             whatsapp_number: profileData.whatsapp_number,
           })
           .select()
@@ -190,7 +181,6 @@ export const ProfileEditor = () => {
           .from('profiles')
           .update({
             full_name: profileData.full_name,
-            email: profileData.email,
             whatsapp_number: profileData.whatsapp_number,
           })
           .eq('id', profileData.id);
@@ -261,19 +251,6 @@ export const ProfileEditor = () => {
               value={profileData.full_name}
               onChange={(e) => setProfileData(prev => prev ? { ...prev, full_name: e.target.value } : null)}
               placeholder="Enter your full name"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-foreground mb-1 block">
-              Email Address *
-            </label>
-            <Input
-              type="email"
-              value={profileData.email}
-              onChange={(e) => setProfileData(prev => prev ? { ...prev, email: e.target.value } : null)}
-              placeholder="your.email@example.com"
               required
             />
           </div>

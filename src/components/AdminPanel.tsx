@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,8 +18,6 @@ interface Profile {
   created_at: string;
   updated_at: string;
   subscription_end_date: string | null;
-  user_id: string | null;
-  email: string | null;
   images: { id: string; image_url: string }[];
 }
 
@@ -54,19 +53,13 @@ export const AdminPanel = () => {
             console.error('Error fetching images:', imagesError);
             return { 
               ...profile, 
-              images: [],
-              // Ensure all required fields are present
-              user_id: profile.user_id || null,
-              email: profile.email || null
+              images: []
             };
           }
 
           return { 
             ...profile, 
-            images: images || [],
-            // Ensure all required fields are present
-            user_id: profile.user_id || null,
-            email: profile.email || null
+            images: images || []
           };
         })
       );
@@ -243,9 +236,6 @@ export const AdminPanel = () => {
                             <div className="flex items-center gap-2 mt-1">
                               <Badge variant={profile.is_active ? "default" : "secondary"} className="text-xs">
                                 {profile.is_active ? "Active" : "Inactive"}
-                              </Badge>
-                              <Badge variant="outline" className="text-xs">
-                                {profile.user_id ? "User Profile" : "Admin Profile"}
                               </Badge>
                             </div>
                           </div>
