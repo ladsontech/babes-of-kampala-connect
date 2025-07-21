@@ -94,7 +94,8 @@ export const AdminProfileForm = ({ onProfileCreated }: { onProfileCreated?: () =
           full_name: formData.fullName,
           whatsapp_number: formData.whatsappNumber,
           is_active: true, // Admin created profiles are active by default
-          // user_id and email are intentionally omitted (will be NULL)
+          user_id: null, // Explicitly set to null for admin profiles
+          email: null // Explicitly set to null for admin profiles
         })
         .select()
         .single();
@@ -132,6 +133,7 @@ export const AdminProfileForm = ({ onProfileCreated }: { onProfileCreated?: () =
         onProfileCreated();
       }
     } catch (error: any) {
+      console.error('Profile creation error:', error);
       toast({
         title: "Error creating profile",
         description: error.message,
