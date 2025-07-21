@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ interface ProfileData {
   full_name: string;
   email: string;
   whatsapp_number: string;
+  user_id: string | null;
   images: { id: string; image_url: string; image_order: number }[];
 }
 
@@ -55,6 +57,7 @@ export const ProfileEditor = () => {
           full_name: '',
           email: user.email || '',
           whatsapp_number: '',
+          user_id: user.id,
           images: []
         });
         return;
@@ -69,7 +72,11 @@ export const ProfileEditor = () => {
       if (imagesError) throw imagesError;
 
       setProfileData({
-        ...profile,
+        id: profile.id,
+        full_name: profile.full_name,
+        email: profile.email || user.email || '',
+        whatsapp_number: profile.whatsapp_number,
+        user_id: profile.user_id,
         images: images || []
       });
       setIsCreating(false);

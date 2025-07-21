@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +15,8 @@ interface Profile {
   whatsapp_number: string;
   is_active: boolean;
   created_at: string;
+  updated_at: string;
+  subscription_end_date: string | null;
   user_id: string | null;
   email: string | null;
   images: { id: string; image_url: string }[];
@@ -51,10 +52,20 @@ export const AdminPanel = () => {
 
           if (imagesError) {
             console.error('Error fetching images:', imagesError);
-            return { ...profile, images: [] };
+            return { 
+              ...profile, 
+              images: [],
+              user_id: profile.user_id || null,
+              email: profile.email || null
+            };
           }
 
-          return { ...profile, images: images || [] };
+          return { 
+            ...profile, 
+            images: images || [],
+            user_id: profile.user_id || null,
+            email: profile.email || null
+          };
         })
       );
 
