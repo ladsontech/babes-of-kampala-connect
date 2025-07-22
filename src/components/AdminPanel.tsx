@@ -22,7 +22,7 @@ interface DatabaseProfile {
   visibility_end_date?: string;
 }
 
-interface Profile {
+interface AdminPanelProfile {
   id: string;
   full_name: string;
   whatsapp_number: string;
@@ -30,16 +30,16 @@ interface Profile {
   created_at: string;
   updated_at: string;
   subscription_end_date: string | null;
-  visibility_duration_months?: number;
-  visibility_start_date?: string;
-  visibility_end_date?: string;
+  visibility_duration_months: number;
+  visibility_start_date: string;
+  visibility_end_date: string;
   images: { id: string; image_url: string }[];
 }
 
 export const AdminPanel = () => {
-  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [profiles, setProfiles] = useState<AdminPanelProfile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
+  const [editingProfile, setEditingProfile] = useState<AdminPanelProfile | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -182,7 +182,7 @@ export const AdminPanel = () => {
     }
   };
 
-  const handleEditProfile = (profile: Profile) => {
+  const handleEditProfile = (profile: AdminPanelProfile) => {
     setEditingProfile(profile);
   };
 
