@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,9 @@ interface Profile {
   created_at: string;
   updated_at: string;
   subscription_end_date: string | null;
+  visibility_duration_months: number;
+  visibility_start_date: string;
+  visibility_end_date: string;
   images: { id: string; image_url: string }[];
 }
 
