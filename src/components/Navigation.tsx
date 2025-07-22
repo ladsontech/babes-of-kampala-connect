@@ -19,18 +19,21 @@ export const Navigation = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-border shadow-sm">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-border/50 shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
         <div 
-          className="flex items-center gap-3 cursor-pointer"
+          className="flex items-center gap-3 cursor-pointer group"
           onClick={() => handleNavigation('/')}
         >
-          <img 
-            src="/images/logo.png" 
-            alt="Kampala Babes Logo" 
-            className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
-          />
-          <div className="text-xl sm:text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+          <div className="relative">
+            <img 
+              src="/images/logo.png" 
+              alt="Kampala Babes Logo" 
+              className="w-10 h-10 sm:w-12 sm:h-12 object-contain drop-shadow-lg group-hover:scale-110 transition-transform duration-300"
+            />
+            <div className="absolute inset-0 bg-gradient-primary opacity-20 rounded-full blur-sm group-hover:opacity-30 transition-opacity duration-300"></div>
+          </div>
+          <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-pink-500 via-red-500 to-orange-500 bg-clip-text text-transparent drop-shadow-sm group-hover:scale-105 transition-transform duration-300">
             Kampala Babes
           </div>
         </div>
@@ -41,6 +44,7 @@ export const Navigation = () => {
             variant={location.pathname === '/profiles' ? 'default' : 'ghost'}
             onClick={() => navigate('/profiles')}
             size="sm"
+            className="hover:scale-105 transition-all duration-200"
           >
             <Users className="w-4 h-4" />
             <span className="ml-2">Browse</span>
@@ -50,7 +54,7 @@ export const Navigation = () => {
             variant="ghost"
             size="sm"
             onClick={() => navigate('/admin')}
-            className="opacity-50 hover:opacity-100 p-2"
+            className="opacity-50 hover:opacity-100 p-2 hover:scale-105 transition-all duration-200"
           >
             <Settings className="w-4 h-4" />
           </Button>
@@ -62,7 +66,7 @@ export const Navigation = () => {
             variant="ghost"
             size="sm"
             onClick={toggleMobileMenu}
-            className="p-2"
+            className="p-2 hover:scale-105 transition-all duration-200"
           >
             {isMobileMenuOpen ? (
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -79,12 +83,12 @@ export const Navigation = () => {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 bg-white/95 backdrop-blur-sm border-b border-border shadow-lg">
+        <div className="md:hidden absolute top-full left-0 right-0 bg-white/95 backdrop-blur-md border-b border-border/50 shadow-xl">
           <div className="px-4 py-3 space-y-2">
             <Button
               variant={location.pathname === '/profiles' ? 'default' : 'ghost'}
               onClick={() => handleNavigation('/profiles')}
-              className="w-full justify-start"
+              className="w-full justify-start hover:scale-105 transition-all duration-200"
               size="sm"
             >
               <Users className="w-4 h-4" />
@@ -94,7 +98,7 @@ export const Navigation = () => {
             <Button
               variant="ghost"
               onClick={() => handleNavigation('/admin')}
-              className="w-full justify-start opacity-50"
+              className="w-full justify-start opacity-50 hover:scale-105 transition-all duration-200"
               size="sm"
             >
               <Settings className="w-4 h-4" />
