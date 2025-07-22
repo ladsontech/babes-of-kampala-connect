@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Heart, Users, Shield, MessageCircle, Sparkles, Star } from "lucide-react";
 import { ProfileCard } from "@/components/ProfileCard";
-import { SignupForm } from "@/components/SignupForm";
 import { Navigation } from "@/components/Navigation";
 import heroImage from "@/assets/hero-image.jpg";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,7 +25,6 @@ export const Home = () => {
 
   const fetchProfiles = async () => {
     try {
-      // Use the same query as the Profiles page to ensure consistency
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
@@ -35,7 +33,6 @@ export const Home = () => {
 
       if (profilesError) throw profilesError;
 
-      // Fetch images for each profile
       const profilesWithImages = await Promise.all(
         profilesData.map(async (profile) => {
           const { data: images, error: imagesError } = await supabase
@@ -62,9 +59,10 @@ export const Home = () => {
   };
 
   const handleJoinClick = () => {
-    document.getElementById('signup-section')?.scrollIntoView({ 
-      behavior: 'smooth' 
-    });
+    const adminWhatsApp = "+256701007478";
+    const message = "Hi! I'm interested in joining Kampala Babes. Could you please help me create a profile?";
+    const whatsappUrl = `https://wa.me/${adminWhatsApp.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   return (
@@ -106,19 +104,19 @@ export const Home = () => {
           <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl mb-8 md:mb-12 text-white/95 max-w-3xl mx-auto leading-relaxed font-light">
             Connect with amazing women in Kampala.<br />
             <span className="font-semibold bg-gradient-to-r from-pink-300 to-orange-300 bg-clip-text text-transparent">
-              Join our exclusive community today.
+              Contact admin to join our exclusive community.
             </span>
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center">
             <Button 
               size="lg" 
-              variant="gradient"
+              variant="whatsapp"
               onClick={handleJoinClick}
               className="text-lg md:text-xl px-8 md:px-12 py-6 md:py-8 hover:scale-110 transform transition-all duration-300 shadow-2xl"
             >
-              <Heart className="w-5 h-5 md:w-6 md:h-6" />
-              Join Now
+              <MessageCircle className="w-5 h-5 md:w-6 md:h-6" />
+              Request to Join
             </Button>
             <Button 
               size="lg" 
@@ -178,11 +176,11 @@ export const Home = () => {
                 </div>
                 <h3 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Be the First to Join!</h3>
                 <p className="text-muted-foreground mb-8 md:mb-10 text-base md:text-lg leading-relaxed">
-                  Our community is just getting started. Create your profile and be among the first amazing women to join Kampala Babes.
+                  Our community is just getting started. Contact our admin to create your profile and be among the first amazing women to join Kampala Babes.
                 </p>
-                <Button variant="gradient" size="lg" onClick={handleJoinClick} className="px-8 md:px-10 py-4 hover:scale-110 transform transition-all duration-300 shadow-xl">
-                  <Heart className="w-5 h-5 md:w-6 md:h-6" />
-                  Create Your Profile
+                <Button variant="whatsapp" size="lg" onClick={handleJoinClick} className="px-8 md:px-10 py-4 hover:scale-110 transform transition-all duration-300 shadow-xl">
+                  <MessageCircle className="w-5 h-5 md:w-6 md:h-6" />
+                  Contact Admin
                 </Button>
               </div>
             </div>
@@ -242,27 +240,38 @@ export const Home = () => {
         </div>
       </section>
 
-      {/* Enhanced Signup Section */}
-      <section id="signup-section" className="py-12 md:py-20 bg-gradient-to-br from-secondary/50 to-accent/40">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-12 md:mb-16">
-            <div className="flex items-center justify-center gap-3 mb-6">
-              <Heart className="w-10 h-10 text-primary animate-pulse" />
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                Ready to Join?
-              </h2>
-              <Heart className="w-10 h-10 text-primary animate-pulse" />
-            </div>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              Create your profile and become part of Kampala's most exclusive community. 
-              Your journey starts here.
-            </p>
+      {/* Call to Action Section */}
+      <section className="py-12 md:py-20 bg-gradient-to-br from-secondary/50 to-accent/40">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <MessageCircle className="w-10 h-10 text-primary animate-pulse" />
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Ready to Join?
+            </h2>
+            <MessageCircle className="w-10 h-10 text-primary animate-pulse" />
           </div>
+          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-8">
+            Contact our admin on WhatsApp to request membership. 
+            Share your details including name, WhatsApp number, and photos to get started.
+          </p>
           
-          <div className="max-w-md mx-auto">
-            <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-2xl border border-white/20">
-              <SignupForm />
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 md:p-8 shadow-2xl border border-white/20 max-w-md mx-auto">
+            <div className="mb-6">
+              <h3 className="text-xl font-bold mb-2">Contact Admin</h3>
+              <p className="text-muted-foreground text-sm mb-4">
+                Send a WhatsApp message to join Kampala Babes
+              </p>
+              <p className="font-mono text-lg text-primary">+256 701 007478</p>
             </div>
+            <Button 
+              variant="whatsapp" 
+              size="lg"
+              onClick={handleJoinClick}
+              className="w-full hover:scale-105 transform transition-all duration-300"
+            >
+              <MessageCircle className="w-5 h-5" />
+              Send WhatsApp Message
+            </Button>
           </div>
         </div>
       </section>
