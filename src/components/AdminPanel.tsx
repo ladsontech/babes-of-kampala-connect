@@ -18,9 +18,9 @@ interface Profile {
   created_at: string;
   updated_at: string;
   subscription_end_date: string | null;
-  visibility_duration_months: number;
-  visibility_start_date: string;
-  visibility_end_date: string;
+  visibility_duration_months?: number;
+  visibility_start_date?: string;
+  visibility_end_date?: string;
   images: { id: string; image_url: string }[];
 }
 
@@ -38,14 +38,14 @@ export const AdminPanel = () => {
     try {
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('*, visibility_duration_months, visibility_start_date, visibility_end_date')
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (profilesError) throw profilesError;
 
       // Fetch images for each profile
       const profilesWithImages = await Promise.all(
-        profilesData.map(async (profile) => {
+        (profilesData || []).map(async (profile) => {
           const { data: images, error: imagesError } = await supabase
             .from('profile_images')
             .select('id, image_url')
@@ -56,13 +56,19 @@ export const AdminPanel = () => {
             console.error('Error fetching images:', imagesError);
             return { 
               ...profile, 
-              images: []
+              images: [],
+              visibility_duration_months: profile.visibility_duration_months || 1,
+              visibility_start_date: profile.visibility_start_date || new Date().toISOString(),
+              visibility_end_date: profile.visibility_end_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
             };
           }
 
           return { 
             ...profile, 
-            images: images || []
+            images: images || [],
+            visibility_duration_months: profile.visibility_duration_months || 1,
+            visibility_start_date: profile.visibility_start_date || new Date().toISOString(),
+            visibility_end_date: profile.visibility_end_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
           };
         })
       );
@@ -282,6 +288,23 @@ export const AdminPanel = () => {
                             <p>{new Date(profile.created_at).toLocaleDateString()}</p>
                           </div>
                         </div>
+
+                        {profile.visibility_duration_months && (
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                            <div>
+                              <p className="font-medium text-muted-foreground">Duration</p>
+                              <p>{profile.visibility_duration_months} month(s)</p>
+                            </div>
+                            <div>
+                              <p className="font-medium text-muted-foreground">Start Date</p>
+                              <p>{profile.visibility_start_date ? new Date(profile.visibility_start_date).toLocaleDateString() : 'N/A'}</p>
+                            </div>
+                            <div>
+                              <p className="font-medium text-muted-foreground">End Date</p>
+                              <p>{profile.visibility_end_date ? new Date(profile.visibility_end_date).toLocaleDateString() : 'N/A'}</p>
+                            </div>
+                          </div>
+                        )}
                         
                         {profile.images.length > 0 && (
                           <div>
