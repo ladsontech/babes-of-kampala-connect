@@ -37,7 +37,8 @@ export const ProfileCard = ({ name, images, whatsappNumber }: ProfileCardProps) 
         <img
           src={images[currentImageIndex].image_url}
           alt={name}
-          className="w-full h-64 sm:h-72 md:h-80 object-cover group-hover:scale-105 transition-transform duration-500"
+          className="w-full h-96 sm:h-[28rem] md:h-[32rem] object-cover group-hover:scale-105 transition-transform duration-500"
+          style={{ aspectRatio: '3/4' }}
           loading="lazy"
         />
         
