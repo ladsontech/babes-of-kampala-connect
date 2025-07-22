@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,19 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminProfileForm } from "./AdminProfileForm";
 import { AdminProfileEdit } from "./AdminProfileEdit";
+
+interface DatabaseProfile {
+  id: string;
+  full_name: string;
+  whatsapp_number: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  subscription_end_date: string | null;
+  visibility_duration_months?: number;
+  visibility_start_date?: string;
+  visibility_end_date?: string;
+}
 
 interface Profile {
   id: string;
@@ -45,7 +57,7 @@ export const AdminPanel = () => {
 
       // Fetch images for each profile
       const profilesWithImages = await Promise.all(
-        (profilesData || []).map(async (profile) => {
+        (profilesData || []).map(async (profile: DatabaseProfile) => {
           const { data: images, error: imagesError } = await supabase
             .from('profile_images')
             .select('id, image_url')
