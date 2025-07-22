@@ -38,7 +38,7 @@ export const AdminPanel = () => {
     try {
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('*')
+        .select('*, visibility_duration_months, visibility_start_date, visibility_end_date')
         .order('created_at', { ascending: false });
 
       if (profilesError) throw profilesError;
