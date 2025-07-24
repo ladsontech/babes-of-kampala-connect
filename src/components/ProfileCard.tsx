@@ -72,7 +72,7 @@ export const ProfileCard = ({
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
         <div className="absolute bottom-4 left-4 right-4 text-white">
           <h3 className="text-lg sm:text-xl font-bold truncate">{name}</h3>
-          <p className="text-white/80 text-xs sm:text-3xl">Contact: {whatsappNumber}</p>
+          <p className="text-white/80 sm:text-3xl text-2xl">Contact: {whatsappNumber}</p>
         </div>
       </div>
       
