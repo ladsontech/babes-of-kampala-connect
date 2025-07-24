@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { ProfileCard } from "@/components/ProfileCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, ArrowLeft } from "lucide-react";
+import { Search, ArrowLeft, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -11,6 +11,7 @@ interface Profile {
   id: string;
   full_name: string;
   whatsapp_number: string;
+  location: string;
   is_premium: boolean;
   images: { image_url: string }[];
 }
@@ -63,8 +64,15 @@ export const Profiles = () => {
   };
   
   const filteredProfiles = profiles.filter(profile =>
-    profile.full_name.toLowerCase().includes(searchTerm.toLowerCase())
+    profile.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    profile.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleAdminWhatsApp = () => {
+    const message = `Hi Admin, I need assistance with Legit Escorts Uganda platform.`;
+    const whatsappUrl = `https://wa.me/256791735461?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
 
   return (
     <div className="min-h-screen bg-background py-8 px-6">
@@ -92,7 +100,7 @@ export const Profiles = () => {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
-                placeholder="Search by name..."
+                placeholder="Search by name or location..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -119,13 +127,14 @@ export const Profiles = () => {
                 name={profile.full_name}
                 images={profile.images}
                 whatsappNumber={profile.whatsapp_number}
+                location={profile.location}
                 isPremium={profile.is_premium}
               />
             ))}
           </div>
         )}
         
-        <div className="text-center mt-12">
+        <div className="text-center mt-12 space-y-6">
           <div className="bg-gradient-secondary/20 rounded-lg p-8 max-w-md mx-auto">
             <h3 className="text-xl font-semibold mb-4">Want to join our community?</h3>
             <p className="text-muted-foreground mb-4">
@@ -137,6 +146,22 @@ export const Profiles = () => {
               onClick={() => navigate('/signup')}
             >
               Join Legit Escorts Uganda
+            </Button>
+          </div>
+
+          <div className="bg-blue-50 rounded-lg p-6 max-w-md mx-auto">
+            <h3 className="text-lg font-semibold mb-2">Need Help?</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Contact our admin for support or assistance
+            </p>
+            <Button 
+              variant="whatsapp" 
+              size="sm"
+              onClick={handleAdminWhatsApp}
+              className="w-full"
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span className="ml-2">Reach Out to Admin</span>
             </Button>
           </div>
         </div>
