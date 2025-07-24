@@ -1,62 +1,70 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Upload, X, ArrowLeft, Crown } from "lucide-react";
-
-interface Profile {
-  id: string;
-  full_name: string;
-  whatsapp_number: string;
-  is_active: boolean;
-  is_premium: boolean;
-  visibility_duration_months: number;
-  visibility_start_date: string;
-  visibility_end_date: string;
-  images: { id: string; image_url: string }[];
-}
+import { Upload, X, ArrowLeft } from "lucide-react";
 
 interface AdminProfileEditProps {
-  profile: Profile;
+  profile: {
+    id: string;
+    full_name: string;
+    whatsapp_number: string;
+    visibility_duration_months: number;
+    is_premium: boolean;
+    images: { id: string; image_url: string }[];
+  };
   onProfileUpdated: () => void;
   onCancel: () => void;
 }
 
 export const AdminProfileEdit = ({ profile, onProfileUpdated, onCancel }: AdminProfileEditProps) => {
-  const [fullName, setFullName] = useState(profile.full_name);
-  const [whatsappNumber, setWhatsappNumber] = useState(profile.whatsapp_number);
-  const [visibilityDurationMonths, setVisibilityDurationMonths] = useState(profile.visibility_duration_months?.toString() || "1");
-  const [isPremium, setIsPremium] = useState(profile.is_premium);
+  const [formData, setFormData] = useState({
+    full_name: profile.full_name,
+    whatsapp_number: profile.whatsapp_number,
+    visibility_duration_months: profile.visibility_duration_months,
+    is_premium: profile.is_premium
+  });
   const [existingImages, setExistingImages] = useState(profile.images);
   const [newImages, setNewImages] = useState<File[]>([]);
-  const [updating, setUpdating] = useState(false);
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files) {
-      const totalImages = existingImages.length + newImages.length;
-      const availableSlots = 5 - totalImages;
-      const filesToAdd = Array.from(files).slice(0, availableSlots);
-      setNewImages([...newImages, ...filesToAdd]);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const totalImages = existingImages.length + newImages.length + files.length;
+    
+    if (totalImages > 5) {
+      toast({
+        title: "Too many images",
+        description: "Maximum 5 images allowed",
+        variant: "destructive"
+      });
+      return;
     }
+    
+    setNewImages(prev => [...prev, ...files]);
   };
 
   const removeExistingImage = async (imageId: string, imageUrl: string) => {
     try {
       // Delete from database
-      const { error: dbError } = await supabase
+      const { error } = await supabase
         .from('profile_images')
         .delete()
         .eq('id', imageId);
 
-      if (dbError) throw dbError;
+      if (error) throw error;
 
       // Delete from storage
       const fileName = imageUrl.split('/').pop();
@@ -66,7 +74,7 @@ export const AdminProfileEdit = ({ profile, onProfileUpdated, onCancel }: AdminP
           .remove([`admin/${fileName}`]);
       }
 
-      setExistingImages(existingImages.filter(img => img.id !== imageId));
+      setExistingImages(prev => prev.filter(img => img.id !== imageId));
       
       toast({
         title: "Success",
@@ -82,61 +90,58 @@ export const AdminProfileEdit = ({ profile, onProfileUpdated, onCancel }: AdminP
   };
 
   const removeNewImage = (index: number) => {
-    setNewImages(newImages.filter((_, i) => i !== index));
+    setNewImages(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setUpdating(true);
+    setLoading(true);
 
     try {
+      // Calculate visibility dates
+      const startDate = new Date();
+      const endDate = new Date();
+      endDate.setMonth(endDate.getMonth() + formData.visibility_duration_months);
+
       // Update profile
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
-          full_name: fullName,
-          whatsapp_number: whatsappNumber,
-          visibility_duration_months: parseInt(visibilityDurationMonths),
-          is_premium: isPremium,
-          visibility_start_date: new Date().toISOString()
+          full_name: formData.full_name,
+          whatsapp_number: formData.whatsapp_number,
+          visibility_duration_months: formData.visibility_duration_months,
+          visibility_start_date: startDate.toISOString(),
+          visibility_end_date: endDate.toISOString(),
+          is_premium: formData.is_premium,
+          updated_at: new Date().toISOString()
         })
         .eq('id', profile.id);
 
       if (profileError) throw profileError;
 
       // Upload new images
-      if (newImages.length > 0) {
-        const imageUrls = [];
-        for (let i = 0; i < newImages.length; i++) {
-          const file = newImages[i];
-          const fileName = `${profile.id}-${Date.now()}-${i}.${file.name.split('.').pop()}`;
-          
-          const { error: uploadError } = await supabase.storage
-            .from('profile-images')
-            .upload(`admin/${fileName}`, file);
+      const imagePromises = newImages.map(async (image, index) => {
+        const fileName = `${profile.id}_${Date.now()}_${index}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('profile-images')
+          .upload(`admin/${fileName}`, image);
 
-          if (uploadError) throw uploadError;
+        if (uploadError) throw uploadError;
 
-          const { data } = supabase.storage
-            .from('profile-images')
-            .getPublicUrl(`admin/${fileName}`);
+        const { data: { publicUrl } } = supabase.storage
+          .from('profile-images')
+          .getPublicUrl(`admin/${fileName}`);
 
-          imageUrls.push(data.publicUrl);
-        }
-
-        // Save new image records
-        const imageRecords = imageUrls.map((url, index) => ({
-          profile_id: profile.id,
-          image_url: url,
-          image_order: existingImages.length + index + 1
-        }));
-
-        const { error: imagesError } = await supabase
+        return supabase
           .from('profile_images')
-          .insert(imageRecords);
+          .insert({
+            profile_id: profile.id,
+            image_url: publicUrl,
+            image_order: existingImages.length + index
+          });
+      });
 
-        if (imagesError) throw imagesError;
-      }
+      await Promise.all(imagePromises);
 
       toast({
         title: "Success",
@@ -146,183 +151,146 @@ export const AdminProfileEdit = ({ profile, onProfileUpdated, onCancel }: AdminP
       onProfileUpdated();
 
     } catch (error: any) {
+      console.error('Error updating profile:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to update profile",
         variant: "destructive"
       });
     } finally {
-      setUpdating(false);
+      setLoading(false);
     }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
   };
 
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="bg-gradient-primary bg-clip-text text-transparent flex items-center gap-2">
-            Edit Profile: {profile.full_name}
-            {profile.is_premium && <Crown className="w-5 h-5 text-yellow-500" />}
-          </CardTitle>
-          <Button variant="ghost" onClick={onCancel}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={onCancel}>
+            <ArrowLeft className="w-4 h-4" />
           </Button>
+          <CardTitle>Edit Profile: {profile.full_name}</CardTitle>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="mb-4 p-3 bg-secondary/20 rounded-lg">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
-            <div>
-              <span className="font-medium">Current Duration:</span> {profile.visibility_duration_months || 1} month(s)
-            </div>
-            <div>
-              <span className="font-medium">Start Date:</span> {formatDate(profile.visibility_start_date)}
-            </div>
-            <div>
-              <span className="font-medium">End Date:</span> {formatDate(profile.visibility_end_date)}
-            </div>
-          </div>
-        </div>
-
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="fullName">Full Name</Label>
-            <Input
-              id="fullName"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              required
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="full_name">Full Name</Label>
+              <Input
+                id="full_name"
+                name="full_name"
+                value={formData.full_name}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="whatsapp_number">WhatsApp Number</Label>
+              <Input
+                id="whatsapp_number"
+                name="whatsapp_number"
+                value={formData.whatsapp_number}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
           </div>
 
           <div>
-            <Label htmlFor="whatsappNumber">WhatsApp Number</Label>
-            <Input
-              id="whatsappNumber"
-              value={whatsappNumber}
-              onChange={(e) => setWhatsappNumber(e.target.value)}
-              placeholder="0791735461"
-              required
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="visibility">New Visibility Duration</Label>
-            <Select value={visibilityDurationMonths} onValueChange={setVisibilityDurationMonths}>
+            <Label htmlFor="visibility_duration">Visibility Duration</Label>
+            <Select
+              value={formData.visibility_duration_months.toString()}
+              onValueChange={(value) => 
+                setFormData(prev => ({ ...prev, visibility_duration_months: parseInt(value) }))
+              }
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select duration" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="1">1 Month</SelectItem>
-                <SelectItem value="2">2 Months</SelectItem>
                 <SelectItem value="3">3 Months</SelectItem>
                 <SelectItem value="6">6 Months</SelectItem>
                 <SelectItem value="12">12 Months</SelectItem>
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground mt-1">
-              Changing this will reset the start date to today
-            </p>
           </div>
 
           <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="isPremium" 
-              checked={isPremium}
-              onCheckedChange={setIsPremium}
+            <Checkbox
+              id="is_premium"
+              checked={formData.is_premium}
+              onCheckedChange={(checked) => 
+                setFormData(prev => ({ ...prev, is_premium: checked === true }))
+              }
             />
-            <Label htmlFor="isPremium" className="text-sm font-medium">
-              Premium Profile
-            </Label>
+            <Label htmlFor="is_premium">Premium Profile</Label>
           </div>
 
           <div>
-            <Label>Profile Images ({existingImages.length + newImages.length}/5)</Label>
-            
-            {/* Existing Images */}
+            <Label>Current Images</Label>
             {existingImages.length > 0 && (
-              <div className="mt-2">
-                <p className="text-sm font-medium mb-2">Current Images:</p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {existingImages.map((image) => (
-                    <div key={image.id} className="relative">
-                      <img
-                        src={image.image_url}
-                        alt="Current"
-                        className="w-full h-24 object-cover rounded-lg"
-                      />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        className="absolute -top-2 -right-2 w-6 h-6 p-0"
-                        onClick={() => removeExistingImage(image.id, image.image_url)}
-                      >
-                        <X className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* New Images */}
-            {newImages.length > 0 && (
-              <div className="mt-4">
-                <p className="text-sm font-medium mb-2">New Images:</p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {newImages.map((image, index) => (
-                    <div key={index} className="relative">
-                      <img
-                        src={URL.createObjectURL(image)}
-                        alt={`New ${index + 1}`}
-                        className="w-full h-24 object-cover rounded-lg"
-                      />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        className="absolute -top-2 -right-2 w-6 h-6 p-0"
-                        onClick={() => removeNewImage(index)}
-                      >
-                        <X className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Upload Button */}
-            {(existingImages.length + newImages.length) < 5 && (
-              <div className="mt-4">
-                <label className="border-2 border-dashed border-border rounded-lg p-4 block cursor-pointer hover:border-primary transition-colors">
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                  />
-                  <div className="text-center">
-                    <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">
-                      Click to add more images
-                    </p>
+              <div className="grid grid-cols-3 gap-2 mt-2 mb-4">
+                {existingImages.map((image) => (
+                  <div key={image.id} className="relative">
+                    <img
+                      src={image.image_url}
+                      alt="Profile"
+                      className="w-full h-20 object-cover rounded"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      className="absolute top-1 right-1 h-6 w-6 p-0"
+                      onClick={() => removeExistingImage(image.id, image.image_url)}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
                   </div>
-                </label>
+                ))}
+              </div>
+            )}
+            
+            <Label htmlFor="new_images">Add New Images</Label>
+            <Input
+              id="new_images"
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleImageUpload}
+              className="mb-4"
+            />
+            
+            {newImages.length > 0 && (
+              <div className="grid grid-cols-3 gap-2 mt-2">
+                {newImages.map((image, index) => (
+                  <div key={index} className="relative">
+                    <img
+                      src={URL.createObjectURL(image)}
+                      alt={`New ${index + 1}`}
+                      className="w-full h-20 object-cover rounded"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      className="absolute top-1 right-1 h-6 w-6 p-0"
+                      onClick={() => removeNewImage(index)}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ))}
               </div>
             )}
           </div>
 
-          <div className="flex gap-3">
-            <Button type="submit" disabled={updating} className="flex-1">
-              {updating ? 'Updating Profile...' : 'Update Profile'}
+          <div className="flex gap-2">
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Updating...' : 'Update Profile'}
             </Button>
             <Button type="button" variant="outline" onClick={onCancel}>
               Cancel

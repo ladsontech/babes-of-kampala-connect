@@ -29,6 +29,7 @@ export const Profiles = () => {
         .from('profiles')
         .select('*')
         .eq('is_active', true)
+        .order('is_premium', { ascending: false })
         .order('created_at', { ascending: false });
 
       if (profilesError) throw profilesError;
@@ -78,10 +79,10 @@ export const Profiles = () => {
           
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold mb-4 bg-gradient-primary bg-clip-text text-transparent">
-              Beautiful Ladies
+              Legit Escorts Uganda
             </h1>
             <p className="text-lg text-muted-foreground">
-              Connect with amazing women from Kampala. Tap any profile to start chatting on WhatsApp!
+              Connect with amazing women from Uganda. Tap any profile to start chatting on WhatsApp!
             </p>
           </div>
           
@@ -116,6 +117,7 @@ export const Profiles = () => {
                 name={profile.full_name}
                 images={profile.images}
                 whatsappNumber={profile.whatsapp_number}
+                isPremium={profile.is_premium}
               />
             ))}
           </div>
@@ -132,7 +134,7 @@ export const Profiles = () => {
               size="lg"
               onClick={() => navigate('/signup')}
             >
-              Join Kampala Babes
+              Join Legit Escorts Uganda
             </Button>
           </div>
         </div>
