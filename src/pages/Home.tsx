@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Heart, Users, Shield, MessageCircle, Sparkles, Star } from "lucide-react";
@@ -7,49 +6,46 @@ import { Navigation } from "@/components/Navigation";
 import heroImage from "@/assets/hero-image.jpg";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
-
 interface Profile {
   id: string;
   full_name: string;
   whatsapp_number: string;
-  images: { image_url: string }[];
+  images: {
+    image_url: string;
+  }[];
 }
-
 export const Home = () => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     fetchProfiles();
   }, []);
-
   const fetchProfiles = async () => {
     try {
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
-
+      const {
+        data: profilesData,
+        error: profilesError
+      } = await supabase.from('profiles').select('*').eq('is_active', true).order('created_at', {
+        ascending: false
+      });
       if (profilesError) throw profilesError;
-
-      const profilesWithImages = await Promise.all(
-        profilesData.map(async (profile) => {
-          const { data: images, error: imagesError } = await supabase
-            .from('profile_images')
-            .select('image_url')
-            .eq('profile_id', profile.id)
-            .order('image_order');
-
-          if (imagesError) {
-            console.error('Error fetching images:', imagesError);
-            return { ...profile, images: [] };
-          }
-
-          return { ...profile, images: images || [] };
-        })
-      );
-
+      const profilesWithImages = await Promise.all(profilesData.map(async profile => {
+        const {
+          data: images,
+          error: imagesError
+        } = await supabase.from('profile_images').select('image_url').eq('profile_id', profile.id).order('image_order');
+        if (imagesError) {
+          console.error('Error fetching images:', imagesError);
+          return {
+            ...profile,
+            images: []
+          };
+        }
+        return {
+          ...profile,
+          images: images || []
+        };
+      }));
       setProfiles(profilesWithImages);
     } catch (error) {
       console.error('Error loading profiles:', error);
@@ -57,24 +53,20 @@ export const Home = () => {
       setLoading(false);
     }
   };
-
   const handleJoinClick = () => {
     const adminWhatsApp = "+256701007478";
     const message = "Hi! I'm interested in joining Kampala Babes. Could you please help me create a profile?";
     const whatsappUrl = `https://wa.me/${adminWhatsApp.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
-
-  return (
-    <div className="min-h-screen">
+  return <div className="min-h-screen">
       <Navigation />
       
       {/* Enhanced Hero Section */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url(${heroImage})` }}
-        />
+        <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{
+        backgroundImage: `url(${heroImage})`
+      }} />
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/30" />
         
         {/* Animated background elements */}
@@ -90,15 +82,11 @@ export const Home = () => {
           </div>
           
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-8xl font-bold mb-6 md:mb-8 leading-tight">
-            <span className="bg-gradient-to-r from-pink-400 via-red-400 to-orange-400 bg-clip-text text-transparent drop-shadow-2xl">
-              Kampala Babes
-            </span>
+            <span className="bg-gradient-to-r from-pink-400 via-red-400 to-orange-400 bg-clip-text text-transparent drop-shadow-2xl">Legit Escorts Uganda</span>
           </h1>
           
           <div className="flex items-center justify-center gap-2 mb-4 md:mb-6">
-            {[...Array(5)].map((_, i) => (
-              <Star key={i} className="w-5 h-5 md:w-6 md:h-6 text-yellow-400 fill-current" />
-            ))}
+            {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 md:w-6 md:h-6 text-yellow-400 fill-current" />)}
           </div>
           
           <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl mb-8 md:mb-12 text-white/95 max-w-3xl mx-auto leading-relaxed font-light">
@@ -109,21 +97,13 @@ export const Home = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center">
-            <Button 
-              size="lg" 
-              variant="whatsapp"
-              onClick={handleJoinClick}
-              className="text-lg md:text-xl px-8 md:px-12 py-6 md:py-8 hover:scale-110 transform transition-all duration-300 shadow-2xl"
-            >
+            <Button size="lg" variant="whatsapp" onClick={handleJoinClick} className="text-lg md:text-xl px-8 md:px-12 py-6 md:py-8 hover:scale-110 transform transition-all duration-300 shadow-2xl">
               <MessageCircle className="w-5 h-5 md:w-6 md:h-6" />
               Request to Join
             </Button>
-            <Button 
-              size="lg" 
-              variant="outline"
-              className="text-lg md:text-xl px-8 md:px-12 py-6 md:py-8 bg-white/10 border-white/40 text-white hover:bg-white/20 hover:scale-110 transform transition-all duration-300 backdrop-blur-sm"
-              onClick={() => document.getElementById('profiles-section')?.scrollIntoView({ behavior: 'smooth' })}
-            >
+            <Button size="lg" variant="outline" className="text-lg md:text-xl px-8 md:px-12 py-6 md:py-8 bg-white/10 border-white/40 text-white hover:bg-white/20 hover:scale-110 transform transition-all duration-300 backdrop-blur-sm" onClick={() => document.getElementById('profiles-section')?.scrollIntoView({
+            behavior: 'smooth'
+          })}>
               <Users className="w-5 h-5 md:w-6 md:h-6" />
               View Profiles
             </Button>
@@ -147,8 +127,7 @@ export const Home = () => {
             </p>
           </div>
           
-          {loading ? (
-            <div className="flex justify-center items-center py-16 md:py-24">
+          {loading ? <div className="flex justify-center items-center py-16 md:py-24">
               <div className="text-center">
                 <div className="relative">
                   <div className="animate-spin rounded-full h-12 w-12 md:h-16 md:w-16 border-b-4 border-primary mx-auto mb-6"></div>
@@ -156,20 +135,9 @@ export const Home = () => {
                 </div>
                 <p className="text-muted-foreground text-lg">Loading amazing profiles...</p>
               </div>
-            </div>
-          ) : profiles.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
-              {profiles.map(profile => (
-                <ProfileCard
-                  key={profile.id}
-                  name={profile.full_name}
-                  images={profile.images}
-                  whatsappNumber={profile.whatsapp_number}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-16 md:py-24">
+            </div> : profiles.length > 0 ? <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+              {profiles.map(profile => <ProfileCard key={profile.id} name={profile.full_name} images={profile.images} whatsappNumber={profile.whatsapp_number} />)}
+            </div> : <div className="text-center py-16 md:py-24">
               <div className="max-w-lg mx-auto">
                 <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-6 md:mb-8 shadow-xl">
                   <Users className="w-10 h-10 md:w-12 md:h-12 text-white" />
@@ -183,8 +151,7 @@ export const Home = () => {
                   Contact Admin
                 </Button>
               </div>
-            </div>
-          )}
+            </div>}
         </div>
       </section>
 
@@ -263,18 +230,12 @@ export const Home = () => {
               </p>
               <p className="font-mono text-lg text-primary">+256 701 007478</p>
             </div>
-            <Button 
-              variant="whatsapp" 
-              size="lg"
-              onClick={handleJoinClick}
-              className="w-full hover:scale-105 transform transition-all duration-300"
-            >
+            <Button variant="whatsapp" size="lg" onClick={handleJoinClick} className="w-full hover:scale-105 transform transition-all duration-300">
               <MessageCircle className="w-5 h-5" />
               Send WhatsApp Message
             </Button>
           </div>
         </div>
       </section>
-    </div>
-  );
+    </div>;
 };
