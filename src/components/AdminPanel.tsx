@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Eye, EyeOff, Trash2, Plus, Edit, Crown } from "lucide-react";
+import { Eye, EyeOff, Trash2, Plus, Edit, Crown, MapPin } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminProfileForm } from "./AdminProfileForm";
@@ -14,12 +13,13 @@ interface DatabaseProfile {
   id: string;
   full_name: string;
   whatsapp_number: string;
+  location: string;
   is_active: boolean;
   is_premium: boolean;
   created_at: string;
   updated_at: string;
   subscription_end_date: string | null;
-  visibility_duration_months?: number;
+  visibility_duration_weeks?: number;
   visibility_start_date?: string;
   visibility_end_date?: string;
 }
@@ -28,12 +28,13 @@ interface AdminPanelProfile {
   id: string;
   full_name: string;
   whatsapp_number: string;
+  location: string;
   is_active: boolean;
   is_premium: boolean;
   created_at: string;
   updated_at: string;
   subscription_end_date: string | null;
-  visibility_duration_months: number;
+  visibility_duration_weeks: number;
   visibility_start_date: string;
   visibility_end_date: string;
   images: { id: string; image_url: string }[];
@@ -74,9 +75,10 @@ export const AdminPanel = () => {
               ...profile, 
               images: [],
               is_premium: profile.is_premium || false,
-              visibility_duration_months: profile.visibility_duration_months || 1,
+              location: profile.location || "Kampala",
+              visibility_duration_weeks: profile.visibility_duration_weeks || 1,
               visibility_start_date: profile.visibility_start_date || new Date().toISOString(),
-              visibility_end_date: profile.visibility_end_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+              visibility_end_date: profile.visibility_end_date || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
             };
           }
 
@@ -84,9 +86,10 @@ export const AdminPanel = () => {
             ...profile, 
             images: images || [],
             is_premium: profile.is_premium || false,
-            visibility_duration_months: profile.visibility_duration_months || 1,
+            location: profile.location || "Kampala",
+            visibility_duration_weeks: profile.visibility_duration_weeks || 1,
             visibility_start_date: profile.visibility_start_date || new Date().toISOString(),
-            visibility_end_date: profile.visibility_end_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+            visibility_end_date: profile.visibility_end_date || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
           };
         })
       );
@@ -300,6 +303,10 @@ export const AdminPanel = () => {
                               <Badge variant={profile.is_active ? "default" : "secondary"} className="text-xs">
                                 {profile.is_active ? "Active" : "Inactive"}
                               </Badge>
+                              <Badge variant="outline" className="text-xs flex items-center gap-1">
+                                <MapPin className="w-3 h-3" />
+                                {profile.location}
+                              </Badge>
                             </div>
                           </div>
                           <div className="flex gap-1">
@@ -351,11 +358,11 @@ export const AdminPanel = () => {
                           </div>
                         </div>
 
-                        {profile.visibility_duration_months && (
+                        {profile.visibility_duration_weeks && (
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
                             <div>
                               <p className="font-medium text-muted-foreground">Duration</p>
-                              <p>{profile.visibility_duration_months} month(s)</p>
+                              <p>{profile.visibility_duration_weeks} week(s)</p>
                             </div>
                             <div>
                               <p className="font-medium text-muted-foreground">Start Date</p>

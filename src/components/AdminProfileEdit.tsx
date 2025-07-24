@@ -15,7 +15,8 @@ interface AdminProfileEditProps {
     id: string;
     full_name: string;
     whatsapp_number: string;
-    visibility_duration_months: number;
+    location: string;
+    visibility_duration_weeks: number;
     is_premium: boolean;
     images: { id: string; image_url: string }[];
   };
@@ -23,11 +24,19 @@ interface AdminProfileEditProps {
   onCancel: () => void;
 }
 
+const UGANDA_CITIES = [
+  "Kampala", "Entebbe", "Jinja", "Mbarara", "Gulu", "Arua", "Mbale", "Fort Portal", 
+  "Lira", "Masaka", "Soroti", "Hoima", "Kabale", "Bushenyi", "Moroto", "Tororo", 
+  "Kasese", "Wakiso", "Mukono", "Iganga", "Masindi", "Lugazi", "Kitgum", "Pallisa", 
+  "Njeru", "Nebbi", "Apac", "Ntungamo", "Kamuli", "Kiryandongo"
+];
+
 export const AdminProfileEdit = ({ profile, onProfileUpdated, onCancel }: AdminProfileEditProps) => {
   const [formData, setFormData] = useState({
     full_name: profile.full_name,
     whatsapp_number: profile.whatsapp_number,
-    visibility_duration_months: profile.visibility_duration_months,
+    location: profile.location || "Kampala",
+    visibility_duration_weeks: profile.visibility_duration_weeks,
     is_premium: profile.is_premium
   });
   const [existingImages, setExistingImages] = useState(profile.images);
@@ -101,7 +110,7 @@ export const AdminProfileEdit = ({ profile, onProfileUpdated, onCancel }: AdminP
       // Calculate visibility dates
       const startDate = new Date();
       const endDate = new Date();
-      endDate.setMonth(endDate.getMonth() + formData.visibility_duration_months);
+      endDate.setDate(endDate.getDate() + (formData.visibility_duration_weeks * 7));
 
       // Update profile
       const { error: profileError } = await supabase
@@ -109,7 +118,8 @@ export const AdminProfileEdit = ({ profile, onProfileUpdated, onCancel }: AdminP
         .update({
           full_name: formData.full_name,
           whatsapp_number: formData.whatsapp_number,
-          visibility_duration_months: formData.visibility_duration_months,
+          location: formData.location,
+          visibility_duration_weeks: formData.visibility_duration_weeks,
           visibility_start_date: startDate.toISOString(),
           visibility_end_date: endDate.toISOString(),
           is_premium: formData.is_premium,
@@ -199,21 +209,43 @@ export const AdminProfileEdit = ({ profile, onProfileUpdated, onCancel }: AdminP
           </div>
 
           <div>
+            <Label htmlFor="location">Location</Label>
+            <Select
+              value={formData.location}
+              onValueChange={(value) => 
+                setFormData(prev => ({ ...prev, location: value }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select location" />
+              </SelectTrigger>
+              <SelectContent>
+                {UGANDA_CITIES.map(city => (
+                  <SelectItem key={city} value={city}>{city}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
             <Label htmlFor="visibility_duration">Visibility Duration</Label>
             <Select
-              value={formData.visibility_duration_months.toString()}
+              value={formData.visibility_duration_weeks.toString()}
               onValueChange={(value) => 
-                setFormData(prev => ({ ...prev, visibility_duration_months: parseInt(value) }))
+                setFormData(prev => ({ ...prev, visibility_duration_weeks: parseInt(value) }))
               }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select duration" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1">1 Month</SelectItem>
-                <SelectItem value="3">3 Months</SelectItem>
-                <SelectItem value="6">6 Months</SelectItem>
-                <SelectItem value="12">12 Months</SelectItem>
+                <SelectItem value="1">1 Week</SelectItem>
+                <SelectItem value="2">2 Weeks</SelectItem>
+                <SelectItem value="4">4 Weeks</SelectItem>
+                <SelectItem value="8">8 Weeks</SelectItem>
+                <SelectItem value="12">12 Weeks</SelectItem>
+                <SelectItem value="24">24 Weeks</SelectItem>
+                <SelectItem value="48">48 Weeks</SelectItem>
               </SelectContent>
             </Select>
           </div>
