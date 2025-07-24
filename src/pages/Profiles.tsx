@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { ProfileCard } from "@/components/ProfileCard";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ interface Profile {
   id: string;
   full_name: string;
   whatsapp_number: string;
+  is_premium: boolean;
   images: { image_url: string }[];
 }
 
