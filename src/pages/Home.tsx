@@ -54,7 +54,7 @@ export const Home = () => {
     }
   };
   const handleJoinClick = () => {
-    const adminWhatsApp = "+256701007478";
+    const adminWhatsApp = "+256791735461";
     const message = "Hi! I'm interested in joining Kampala Babes. Could you please help me create a profile?";
     const whatsappUrl = `https://wa.me/${adminWhatsApp.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
@@ -228,7 +228,7 @@ export const Home = () => {
               <p className="text-muted-foreground text-sm mb-4">
                 Send a WhatsApp message to join Kampala Babes
               </p>
-              <p className="font-mono text-lg text-primary">+256791735461</p>
+              <p className="font-mono text-lg text-primary">+256 701 007478</p>
             </div>
             <Button variant="whatsapp" size="lg" onClick={handleJoinClick} className="w-full hover:scale-105 transform transition-all duration-300">
               <MessageCircle className="w-5 h-5" />
