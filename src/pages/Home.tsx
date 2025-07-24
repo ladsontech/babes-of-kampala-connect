@@ -228,7 +228,7 @@ export const Home = () => {
               <p className="text-muted-foreground text-sm mb-4">
                 Send a WhatsApp message to join Kampala Babes
               </p>
-              <p className="font-mono text-lg text-primary">+256 701 007478</p>
+              <p className="font-mono text-lg text-primary">+256791735461</p>
             </div>
             <Button variant="whatsapp" size="lg" onClick={handleJoinClick} className="w-full hover:scale-105 transform transition-all duration-300">
               <MessageCircle className="w-5 h-5" />
