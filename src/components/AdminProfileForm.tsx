@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Upload, X, Plus } from "lucide-react";
+import { Upload, X } from "lucide-react";
 
 interface AdminProfileFormProps {
   onProfileCreated: () => void;
@@ -17,6 +18,7 @@ export const AdminProfileForm = ({ onProfileCreated }: AdminProfileFormProps) =>
   const [fullName, setFullName] = useState("");
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [visibilityDurationMonths, setVisibilityDurationMonths] = useState("1");
+  const [isPremium, setIsPremium] = useState(false);
   const [images, setImages] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
@@ -54,6 +56,7 @@ export const AdminProfileForm = ({ onProfileCreated }: AdminProfileFormProps) =>
           full_name: fullName,
           whatsapp_number: whatsappNumber,
           visibility_duration_months: parseInt(visibilityDurationMonths),
+          is_premium: isPremium,
           is_active: true
         })
         .select()
@@ -102,6 +105,7 @@ export const AdminProfileForm = ({ onProfileCreated }: AdminProfileFormProps) =>
       setFullName("");
       setWhatsappNumber("");
       setVisibilityDurationMonths("1");
+      setIsPremium(false);
       setImages([]);
       onProfileCreated();
 
@@ -141,7 +145,7 @@ export const AdminProfileForm = ({ onProfileCreated }: AdminProfileFormProps) =>
               id="whatsappNumber"
               value={whatsappNumber}
               onChange={(e) => setWhatsappNumber(e.target.value)}
-              placeholder="+256701234567"
+              placeholder="0791735461"
               required
             />
           </div>
@@ -160,6 +164,17 @@ export const AdminProfileForm = ({ onProfileCreated }: AdminProfileFormProps) =>
                 <SelectItem value="12">12 Months</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="isPremium" 
+              checked={isPremium}
+              onCheckedChange={setIsPremium}
+            />
+            <Label htmlFor="isPremium" className="text-sm font-medium">
+              Premium Profile
+            </Label>
           </div>
 
           <div>

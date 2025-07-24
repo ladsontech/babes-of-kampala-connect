@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Eye, EyeOff, Trash2, Plus, Edit } from "lucide-react";
+import { Eye, EyeOff, Trash2, Plus, Edit, Crown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminProfileForm } from "./AdminProfileForm";
@@ -14,6 +15,7 @@ interface DatabaseProfile {
   full_name: string;
   whatsapp_number: string;
   is_active: boolean;
+  is_premium: boolean;
   created_at: string;
   updated_at: string;
   subscription_end_date: string | null;
@@ -27,6 +29,7 @@ interface AdminPanelProfile {
   full_name: string;
   whatsapp_number: string;
   is_active: boolean;
+  is_premium: boolean;
   created_at: string;
   updated_at: string;
   subscription_end_date: string | null;
@@ -51,6 +54,7 @@ export const AdminPanel = () => {
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
+        .order('is_premium', { ascending: false })
         .order('created_at', { ascending: false });
 
       if (profilesError) throw profilesError;
@@ -69,6 +73,7 @@ export const AdminPanel = () => {
             return { 
               ...profile, 
               images: [],
+              is_premium: profile.is_premium || false,
               visibility_duration_months: profile.visibility_duration_months || 1,
               visibility_start_date: profile.visibility_start_date || new Date().toISOString(),
               visibility_end_date: profile.visibility_end_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
@@ -78,6 +83,7 @@ export const AdminPanel = () => {
           return { 
             ...profile, 
             images: images || [],
+            is_premium: profile.is_premium || false,
             visibility_duration_months: profile.visibility_duration_months || 1,
             visibility_start_date: profile.visibility_start_date || new Date().toISOString(),
             visibility_end_date: profile.visibility_end_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
@@ -116,6 +122,34 @@ export const AdminPanel = () => {
       toast({
         title: "Success",
         description: `Profile ${!currentStatus ? 'activated' : 'deactivated'} successfully`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const togglePremiumStatus = async (profileId: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_premium: !currentStatus })
+        .eq('id', profileId);
+
+      if (error) throw error;
+
+      setProfiles(profiles.map(profile => 
+        profile.id === profileId 
+          ? { ...profile, is_premium: !currentStatus }
+          : profile
+      ));
+
+      toast({
+        title: "Success",
+        description: `Profile ${!currentStatus ? 'upgraded to premium' : 'downgraded from premium'} successfully`,
       });
     } catch (error: any) {
       toast({
@@ -253,7 +287,15 @@ export const AdminPanel = () => {
                       <CardHeader className="pb-3">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                           <div className="flex flex-col">
-                            <CardTitle className="text-lg sm:text-xl">{profile.full_name}</CardTitle>
+                            <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
+                              {profile.full_name}
+                              {profile.is_premium && (
+                                <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white">
+                                  <Crown className="w-3 h-3 mr-1" />
+                                  PREMIUM
+                                </Badge>
+                              )}
+                            </CardTitle>
                             <div className="flex items-center gap-2 mt-1">
                               <Badge variant={profile.is_active ? "default" : "secondary"} className="text-xs">
                                 {profile.is_active ? "Active" : "Inactive"}
@@ -276,6 +318,14 @@ export const AdminPanel = () => {
                               className="p-2"
                             >
                               {profile.is_active ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => togglePremiumStatus(profile.id, profile.is_premium)}
+                              className="p-2"
+                            >
+                              <Crown className="w-4 h-4" />
                             </Button>
                             <Button
                               variant="outline"

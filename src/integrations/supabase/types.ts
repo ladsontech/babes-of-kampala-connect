@@ -52,6 +52,7 @@ export type Database = {
           full_name: string
           id: string
           is_active: boolean
+          is_premium: boolean | null
           subscription_end_date: string | null
           updated_at: string
           whatsapp_number: string
@@ -61,6 +62,7 @@ export type Database = {
           full_name: string
           id?: string
           is_active?: boolean
+          is_premium?: boolean | null
           subscription_end_date?: string | null
           updated_at?: string
           whatsapp_number: string
@@ -70,6 +72,7 @@ export type Database = {
           full_name?: string
           id?: string
           is_active?: boolean
+          is_premium?: boolean | null
           subscription_end_date?: string | null
           updated_at?: string
           whatsapp_number?: string

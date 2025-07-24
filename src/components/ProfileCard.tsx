@@ -1,22 +1,28 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Phone, Crown } from "lucide-react";
 import { useState } from "react";
 
 interface ProfileCardProps {
   name: string;
   images: { image_url: string }[];
   whatsappNumber: string;
+  isPremium?: boolean;
 }
 
-export const ProfileCard = ({ name, images, whatsappNumber }: ProfileCardProps) => {
+export const ProfileCard = ({ name, images, whatsappNumber, isPremium = false }: ProfileCardProps) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
   const handleWhatsAppClick = () => {
-    const message = `Hi ${name}, I found your profile on Kampala Babes and would like to chat!`;
+    const message = `Hi ${name}, I found your profile on Legit Escorts Uganda and would like to chat!`;
     const whatsappUrl = `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
+  };
+
+  const handleCallClick = () => {
+    const telUrl = `tel:${whatsappNumber}`;
+    window.open(telUrl, '_self');
   };
 
   const nextImage = () => {
@@ -34,6 +40,14 @@ export const ProfileCard = ({ name, images, whatsappNumber }: ProfileCardProps) 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 group border-0 bg-white/80 backdrop-blur-sm">
       <div className="relative">
+        {/* Premium Badge */}
+        {isPremium && (
+          <div className="absolute top-3 left-3 z-20 bg-gradient-to-r from-yellow-400 to-yellow-600 text-white px-2 py-1 rounded-full flex items-center gap-1 text-xs font-bold shadow-lg">
+            <Crown className="w-3 h-3" />
+            PREMIUM
+          </div>
+        )}
+
         <img
           src={images[currentImageIndex].image_url}
           alt={name}
@@ -58,7 +72,7 @@ export const ProfileCard = ({ name, images, whatsappNumber }: ProfileCardProps) 
             >
               <span className="text-sm sm:text-base">→</span>
             </button>
-            <div className="absolute bottom-16 sm:bottom-20 left-1/2 -translate-x-1/2 flex gap-1.5">
+            <div className="absolute bottom-20 sm:bottom-24 left-1/2 -translate-x-1/2 flex gap-1.5">
               {images.map((_, index) => (
                 <button
                   key={index}
@@ -73,22 +87,52 @@ export const ProfileCard = ({ name, images, whatsappNumber }: ProfileCardProps) 
           </>
         )}
         
+        {/* Contact Options Overlay */}
+        <div className="absolute top-3 right-3 z-20 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
+          <Button
+            onClick={handleWhatsAppClick}
+            size="sm"
+            className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-full shadow-lg"
+            aria-label="Contact on WhatsApp"
+          >
+            <MessageCircle className="w-4 h-4" />
+          </Button>
+          <Button
+            onClick={handleCallClick}
+            size="sm"
+            className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded-full shadow-lg"
+            aria-label="Call"
+          >
+            <Phone className="w-4 h-4" />
+          </Button>
+        </div>
+        
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
         <div className="absolute bottom-4 left-4 right-4 text-white">
           <h3 className="text-lg sm:text-xl font-bold truncate">{name}</h3>
-          <p className="text-white/80 text-xs sm:text-sm">Tap to connect on WhatsApp</p>
+          <p className="text-white/80 text-xs sm:text-sm">Contact: {whatsappNumber}</p>
         </div>
       </div>
       
-      <CardContent className="p-3 sm:p-4">
+      <CardContent className="p-3 sm:p-4 space-y-2">
         <Button 
           onClick={handleWhatsAppClick}
-          variant="gradient"
+          variant="whatsapp"
           className="w-full text-sm sm:text-base py-2.5 sm:py-3 transition-all duration-300 hover:scale-105"
           size="sm"
         >
           <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span className="ml-2">Contact {name}</span>
+          <span className="ml-2">WhatsApp {name}</span>
+        </Button>
+        
+        <Button 
+          onClick={handleCallClick}
+          variant="outline"
+          className="w-full text-sm sm:text-base py-2.5 sm:py-3 transition-all duration-300 hover:scale-105"
+          size="sm"
+        >
+          <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span className="ml-2">Call {name}</span>
         </Button>
       </CardContent>
     </Card>

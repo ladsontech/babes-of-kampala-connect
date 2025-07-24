@@ -1,18 +1,21 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Upload, X, ArrowLeft } from "lucide-react";
+import { Upload, X, ArrowLeft, Crown } from "lucide-react";
 
 interface Profile {
   id: string;
   full_name: string;
   whatsapp_number: string;
   is_active: boolean;
+  is_premium: boolean;
   visibility_duration_months: number;
   visibility_start_date: string;
   visibility_end_date: string;
@@ -29,6 +32,7 @@ export const AdminProfileEdit = ({ profile, onProfileUpdated, onCancel }: AdminP
   const [fullName, setFullName] = useState(profile.full_name);
   const [whatsappNumber, setWhatsappNumber] = useState(profile.whatsapp_number);
   const [visibilityDurationMonths, setVisibilityDurationMonths] = useState(profile.visibility_duration_months?.toString() || "1");
+  const [isPremium, setIsPremium] = useState(profile.is_premium);
   const [existingImages, setExistingImages] = useState(profile.images);
   const [newImages, setNewImages] = useState<File[]>([]);
   const [updating, setUpdating] = useState(false);
@@ -93,6 +97,7 @@ export const AdminProfileEdit = ({ profile, onProfileUpdated, onCancel }: AdminP
           full_name: fullName,
           whatsapp_number: whatsappNumber,
           visibility_duration_months: parseInt(visibilityDurationMonths),
+          is_premium: isPremium,
           visibility_start_date: new Date().toISOString()
         })
         .eq('id', profile.id);
@@ -159,8 +164,9 @@ export const AdminProfileEdit = ({ profile, onProfileUpdated, onCancel }: AdminP
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="bg-gradient-primary bg-clip-text text-transparent">
+          <CardTitle className="bg-gradient-primary bg-clip-text text-transparent flex items-center gap-2">
             Edit Profile: {profile.full_name}
+            {profile.is_premium && <Crown className="w-5 h-5 text-yellow-500" />}
           </CardTitle>
           <Button variant="ghost" onClick={onCancel}>
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -200,7 +206,7 @@ export const AdminProfileEdit = ({ profile, onProfileUpdated, onCancel }: AdminP
               id="whatsappNumber"
               value={whatsappNumber}
               onChange={(e) => setWhatsappNumber(e.target.value)}
-              placeholder="+256701234567"
+              placeholder="0791735461"
               required
             />
           </div>
@@ -222,6 +228,17 @@ export const AdminProfileEdit = ({ profile, onProfileUpdated, onCancel }: AdminP
             <p className="text-xs text-muted-foreground mt-1">
               Changing this will reset the start date to today
             </p>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="isPremium" 
+              checked={isPremium}
+              onCheckedChange={setIsPremium}
+            />
+            <Label htmlFor="isPremium" className="text-sm font-medium">
+              Premium Profile
+            </Label>
           </div>
 
           <div>
