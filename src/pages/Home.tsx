@@ -159,9 +159,7 @@ export const Home = () => {
       <section className="py-12 md:py-20 bg-gradient-to-br from-secondary/40 via-background to-accent/30">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12 md:mb-16">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Why Choose Kampala Babes?
-            </h2>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Why Choose Legit Escorts?</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Experience the best way to connect with amazing people in Kampala
             </p>
