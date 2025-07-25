@@ -36,7 +36,10 @@ export const Home = () => {
         .order('is_premium', { ascending: false })
         .order('created_at', { ascending: false });
 
-      if (profilesError) throw profilesError;
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        return;
+      }
 
       // Fetch images for each profile
       const profilesWithImages = await Promise.all(
@@ -183,7 +186,7 @@ export const Home = () => {
                 <p className="text-muted-foreground mb-8 md:mb-10 text-base md:text-lg leading-relaxed">
                   Our community is just getting started. Contact our admin to create your profile and be among the first amazing women to join Legit Escorts Uganda.
                 </p>
-                <Button variant="whatsapp" size="lg" onClick={handleJoinClick} className="px-8 md:px-10 py-4 hover:scale-110 transform transition-all duration-300 shadow-xl">
+                <Button variant="whatsapp" size="lg" onClick={handleJoinClick} className="px-8 md:px-10 py-4 hover:scale-105 transform transition-all duration-300 shadow-xl">
                   <MessageCircle className="w-5 h-5 md:w-6 md:h-6" />
                   Contact Admin
                 </Button>

@@ -53,8 +53,12 @@ export type Database = {
           id: string
           is_active: boolean
           is_premium: boolean | null
+          location: string | null
           subscription_end_date: string | null
           updated_at: string
+          visibility_duration_weeks: number
+          visibility_end_date: string | null
+          visibility_start_date: string
           whatsapp_number: string
         }
         Insert: {
@@ -63,8 +67,12 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_premium?: boolean | null
+          location?: string | null
           subscription_end_date?: string | null
           updated_at?: string
+          visibility_duration_weeks?: number
+          visibility_end_date?: string | null
+          visibility_start_date?: string
           whatsapp_number: string
         }
         Update: {
@@ -73,8 +81,12 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_premium?: boolean | null
+          location?: string | null
           subscription_end_date?: string | null
           updated_at?: string
+          visibility_duration_weeks?: number
+          visibility_end_date?: string | null
+          visibility_start_date?: string
           whatsapp_number?: string
         }
         Relationships: []

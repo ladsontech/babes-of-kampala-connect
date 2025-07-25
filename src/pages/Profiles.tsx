@@ -35,11 +35,14 @@ export const Profiles = () => {
         .order('is_premium', { ascending: false })
         .order('created_at', { ascending: false });
 
-      if (profilesError) throw profilesError;
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        return;
+      }
 
       // Fetch images for each profile
       const profilesWithImages = await Promise.all(
-        profilesData.map(async (profile) => {
+        (profilesData || []).map(async (profile) => {
           const { data: images, error: imagesError } = await supabase
             .from('profile_images')
             .select('image_url')
