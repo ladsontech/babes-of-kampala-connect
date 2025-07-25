@@ -30,7 +30,7 @@ export const Profiles = () => {
     try {
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, full_name, whatsapp_number, location, is_premium, is_active, created_at')
         .eq('is_active', true)
         .order('is_premium', { ascending: false })
         .order('created_at', { ascending: false });
@@ -48,10 +48,18 @@ export const Profiles = () => {
 
           if (imagesError) {
             console.error('Error fetching images:', imagesError);
-            return { ...profile, images: [] };
+            return { 
+              ...profile, 
+              images: [],
+              location: profile.location || 'Kampala'
+            };
           }
 
-          return { ...profile, images: images || [] };
+          return { 
+            ...profile, 
+            images: images || [],
+            location: profile.location || 'Kampala'
+          };
         })
       );
 
