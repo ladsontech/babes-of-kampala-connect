@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Heart, Users, Shield, MessageCircle, Sparkles, Star } from "lucide-react";
@@ -6,46 +7,63 @@ import { Navigation } from "@/components/Navigation";
 import heroImage from "@/assets/hero-image.jpg";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
+
 interface Profile {
   id: string;
   full_name: string;
   whatsapp_number: string;
+  location: string;
+  is_premium: boolean;
   images: {
     image_url: string;
   }[];
 }
+
 export const Home = () => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     fetchProfiles();
   }, []);
+
   const fetchProfiles = async () => {
     try {
-      const {
-        data: profilesData,
-        error: profilesError
-      } = await supabase.from('profiles').select('*').eq('is_active', true).order('created_at', {
-        ascending: false
-      });
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name, whatsapp_number, location, is_premium, is_active, created_at')
+        .eq('is_active', true)
+        .order('is_premium', { ascending: false })
+        .order('created_at', { ascending: false });
+
       if (profilesError) throw profilesError;
-      const profilesWithImages = await Promise.all(profilesData.map(async profile => {
-        const {
-          data: images,
-          error: imagesError
-        } = await supabase.from('profile_images').select('image_url').eq('profile_id', profile.id).order('image_order');
-        if (imagesError) {
-          console.error('Error fetching images:', imagesError);
-          return {
-            ...profile,
-            images: []
+
+      // Fetch images for each profile
+      const profilesWithImages = await Promise.all(
+        (profilesData || []).map(async (profile) => {
+          const { data: images, error: imagesError } = await supabase
+            .from('profile_images')
+            .select('image_url')
+            .eq('profile_id', profile.id)
+            .order('image_order');
+
+          if (imagesError) {
+            console.error('Error fetching images:', imagesError);
+            return { 
+              ...profile, 
+              images: [],
+              location: profile.location || 'Kampala'
+            };
+          }
+
+          return { 
+            ...profile, 
+            images: images || [],
+            location: profile.location || 'Kampala'
           };
-        }
-        return {
-          ...profile,
-          images: images || []
-        };
-      }));
+        })
+      );
+
       setProfiles(profilesWithImages);
     } catch (error) {
       console.error('Error loading profiles:', error);
@@ -53,20 +71,23 @@ export const Home = () => {
       setLoading(false);
     }
   };
+
   const handleJoinClick = () => {
-    const adminWhatsApp = "+256701007478";
-    const message = "Hi! I'm interested in joining Kampala Babes. Could you please help me create a profile?";
+    const adminWhatsApp = "+256791735461";
+    const message = "Hi! I'm interested in joining Legit Escorts Uganda. Could you please help me create a profile?";
     const whatsappUrl = `https://wa.me/${adminWhatsApp.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
-  return <div className="min-h-screen">
+
+  return (
+    <div className="min-h-screen">
       <Navigation />
       
       {/* Enhanced Hero Section */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{
-        backgroundImage: `url(${heroImage})`
-      }} />
+          backgroundImage: `url(${heroImage})`
+        }} />
         <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/30" />
         
         {/* Animated background elements */}
@@ -86,7 +107,9 @@ export const Home = () => {
           </h1>
           
           <div className="flex items-center justify-center gap-2 mb-4 md:mb-6">
-            {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 md:w-6 md:h-6 text-yellow-400 fill-current" />)}
+            {[...Array(5)].map((_, i) => (
+              <Star key={i} className="w-5 h-5 md:w-6 md:h-6 text-yellow-400 fill-current" />
+            ))}
           </div>
           
           <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl mb-8 md:mb-12 text-white/95 max-w-3xl mx-auto leading-relaxed font-light">
@@ -102,8 +125,8 @@ export const Home = () => {
               Request to Join
             </Button>
             <Button size="lg" variant="outline" className="text-lg md:text-xl px-8 md:px-12 py-6 md:py-8 bg-white/10 border-white/40 text-white hover:bg-white/20 hover:scale-110 transform transition-all duration-300 backdrop-blur-sm" onClick={() => document.getElementById('profiles-section')?.scrollIntoView({
-            behavior: 'smooth'
-          })}>
+              behavior: 'smooth'
+            })}>
               <Users className="w-5 h-5 md:w-6 md:h-6" />
               View Profiles
             </Button>
@@ -127,7 +150,8 @@ export const Home = () => {
             </p>
           </div>
           
-          {loading ? <div className="flex justify-center items-center py-16 md:py-24">
+          {loading ? (
+            <div className="flex justify-center items-center py-16 md:py-24">
               <div className="text-center">
                 <div className="relative">
                   <div className="animate-spin rounded-full h-12 w-12 md:h-16 md:w-16 border-b-4 border-primary mx-auto mb-6"></div>
@@ -135,23 +159,37 @@ export const Home = () => {
                 </div>
                 <p className="text-muted-foreground text-lg">Loading amazing profiles...</p>
               </div>
-            </div> : profiles.length > 0 ? <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
-              {profiles.map(profile => <ProfileCard key={profile.id} name={profile.full_name} images={profile.images} whatsappNumber={profile.whatsapp_number} />)}
-            </div> : <div className="text-center py-16 md:py-24">
+            </div>
+          ) : profiles.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+              {profiles.map(profile => (
+                <ProfileCard 
+                  key={profile.id} 
+                  name={profile.full_name} 
+                  images={profile.images} 
+                  whatsappNumber={profile.whatsapp_number}
+                  location={profile.location}
+                  isPremium={profile.is_premium}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16 md:py-24">
               <div className="max-w-lg mx-auto">
                 <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-6 md:mb-8 shadow-xl">
                   <Users className="w-10 h-10 md:w-12 md:h-12 text-white" />
                 </div>
                 <h3 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Be the First to Join!</h3>
                 <p className="text-muted-foreground mb-8 md:mb-10 text-base md:text-lg leading-relaxed">
-                  Our community is just getting started. Contact our admin to create your profile and be among the first amazing women to join Kampala Babes.
+                  Our community is just getting started. Contact our admin to create your profile and be among the first amazing women to join Legit Escorts Uganda.
                 </p>
                 <Button variant="whatsapp" size="lg" onClick={handleJoinClick} className="px-8 md:px-10 py-4 hover:scale-110 transform transition-all duration-300 shadow-xl">
                   <MessageCircle className="w-5 h-5 md:w-6 md:h-6" />
                   Contact Admin
                 </Button>
               </div>
-            </div>}
+            </div>
+          )}
         </div>
       </section>
 
@@ -159,7 +197,7 @@ export const Home = () => {
       <section className="py-12 md:py-20 bg-gradient-to-br from-secondary/40 via-background to-accent/30">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12 md:mb-16">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Why Choose Legit Escorts?</h2>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Why Choose Legit Escorts Uganda?</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Experience the best way to connect with amazing people in Kampala
             </p>
@@ -224,7 +262,7 @@ export const Home = () => {
             <div className="mb-6">
               <h3 className="text-xl font-bold mb-2">Contact Admin</h3>
               <p className="text-muted-foreground text-sm mb-4">
-                Send a WhatsApp message to join Kampala Babes
+                Send a WhatsApp message to join Legit Escorts Uganda
               </p>
               <p className="font-mono text-lg text-primary">+256791735461</p>
             </div>
@@ -235,5 +273,6 @@ export const Home = () => {
           </div>
         </div>
       </section>
-    </div>;
+    </div>
+  );
 };
